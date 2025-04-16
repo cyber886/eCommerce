@@ -6,9 +6,6 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-// Add memorystore for session storage
-import createMemoryStore from "memorystore";
-import sessionPackage from "express-session";
 
 declare global {
   namespace Express {
@@ -32,20 +29,17 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Create memory store
-  const MemoryStore = createMemoryStore(sessionPackage);
-  storage.sessionStore = new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  });
-  
+  // Session setup
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "your-session-secret",
+    secret: process.env.SESSION_SECRET || "uzum-market-development-secret",
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    }
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    },
+    store: storage.sessionStore,
   };
 
   app.set("trust proxy", 1);
@@ -54,7 +48,7 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username: string, password: string, done: any) => {
+    new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
         if (!user || !(await comparePasswords(password, user.password))) {
@@ -62,8 +56,8 @@ export function setupAuth(app: Express) {
         } else {
           return done(null, user);
         }
-      } catch (err) {
-        return done(err);
+      } catch (error) {
+        return done(error);
       }
     }),
   );
@@ -73,8 +67,8 @@ export function setupAuth(app: Express) {
     try {
       const user = await storage.getUserById(id);
       done(null, user);
-    } catch (err) {
-      done(err);
+    } catch (error) {
+      done(error);
     }
   });
 
@@ -97,30 +91,26 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
-        // Return user without password
+        // Don't send the password back to the client
         const { password, ...userWithoutPassword } = user;
         res.status(201).json(userWithoutPassword);
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: any, info: any) => {
-      if (err) {
-        return next(err);
-      }
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      req.login(user, (err: any) => {
-        if (err) {
-          return next(err);
-        }
-        // Return user without password
+      req.login(user, (err) => {
+        if (err) return next(err);
+        // Don't send the password back to the client
         const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
+        res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
   });
@@ -133,9 +123,11 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-    // Return user without password
-    const { password, ...userWithoutPassword } = req.user as Express.User;
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    // Don't send the password back to the client
+    const { password, ...userWithoutPassword } = req.user as SelectUser;
     res.json(userWithoutPassword);
   });
 }
