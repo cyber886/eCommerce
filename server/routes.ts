@@ -2,14 +2,18 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
-import { insertOrderSchema, insertCartItemSchema } from "@shared/schema";
+import { insertOrderSchema, insertCartItemSchema, insertWishlistItemSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Create session ID if not exists
+  // Setup authentication
+  setupAuth(app);
+  
+  // Create session ID if not exists for non-authenticated sessions
   app.use((req, res, next) => {
-    if (!req.headers.cookie || !req.headers.cookie.includes('sessionId=')) {
+    if (!req.isAuthenticated() && (!req.headers.cookie || !req.headers.cookie.includes('sessionId='))) {
       const sessionId = randomUUID();
       res.setHeader('Set-Cookie', `sessionId=${sessionId}; Path=/; HttpOnly`);
     }
@@ -240,6 +244,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ order, items });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch order" });
+    }
+  });
+
+  // Wishlist routes (requires authentication)
+  app.get("/api/wishlist", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const userId = (req.user as Express.User).id;
+      const wishlistItems = await storage.getWishlistItemWithProduct(userId);
+      res.json(wishlistItems);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch wishlist items" });
+    }
+  });
+
+  app.post("/api/wishlist", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const userId = (req.user as Express.User).id;
+      const wishlistItemData = { ...req.body, userId };
+      const validatedData = insertWishlistItemSchema.parse(wishlistItemData);
+      const wishlistItem = await storage.addToWishlist(validatedData);
+      
+      res.status(201).json(wishlistItem);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: fromZodError(error).message });
+      }
+      res.status(500).json({ error: "Failed to add item to wishlist" });
+    }
+  });
+
+  app.delete("/api/wishlist/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid wishlist item ID" });
+      }
+
+      await storage.removeFromWishlist(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove item from wishlist" });
+    }
+  });
+
+  app.get("/api/wishlist/check/:productId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated", inWishlist: false });
+      }
+      
+      const userId = (req.user as Express.User).id;
+      const productId = parseInt(req.params.productId);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: "Invalid product ID" });
+      }
+
+      const inWishlist = await storage.isProductInWishlist(userId, productId);
+      res.json({ inWishlist });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check wishlist status" });
+    }
+  });
+
+  // Order tracking endpoint
+  app.get("/api/orders/:id/track", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid order ID" });
+      }
+
+      const order = await storage.getOrderById(id);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // In a real implementation, this would connect to a tracking service
+      // For now, we'll generate fake tracking data
+      const trackingInfo = {
+        orderId: order.id,
+        status: "in_transit", // "processing", "in_transit", "out_for_delivery", "delivered"
+        estimatedDelivery: order.deliveryDate,
+        currentLocation: "Tashkent Distribution Center",
+        lastUpdated: new Date().toISOString(),
+        history: [
+          { 
+            status: "order_placed", 
+            location: "Online", 
+            timestamp: new Date(order.createdAt).toISOString(),
+            description: "Order placed successfully"
+          },
+          { 
+            status: "processing", 
+            location: "Warehouse", 
+            timestamp: new Date(new Date(order.createdAt).getTime() + 1000*60*60).toISOString(),
+            description: "Order picked and packed" 
+          },
+          { 
+            status: "in_transit", 
+            location: "Tashkent Distribution Center", 
+            timestamp: new Date(new Date(order.createdAt).getTime() + 1000*60*60*3).toISOString(),
+            description: "Order shipped" 
+          }
+        ]
+      };
+      
+      res.json(trackingInfo);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tracking information" });
+    }
+  });
+
+  // Purchase history endpoint (requires authentication)
+  app.get("/api/purchase-history", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // In a real app, we would filter orders by user ID
+      // For now, we'll just return all orders since we don't have that relationship
+      const orders = await storage.getOrdersBySessionId(getSessionId(req));
+      
+      // Get items for each order
+      const ordersWithItems = await Promise.all(
+        orders.map(async (order) => {
+          const items = await storage.getOrderItemsByOrderId(order.id);
+          return { order, items };
+        })
+      );
+      
+      res.json(ordersWithItems);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch purchase history" });
     }
   });
 

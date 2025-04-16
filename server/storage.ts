@@ -8,7 +8,11 @@ import {
   OrderItem, 
   InsertOrderItem,
   Category,
-  InsertCategory
+  InsertCategory,
+  User,
+  InsertUser,
+  WishlistItem,
+  InsertWishlistItem
 } from "@shared/schema";
 
 // modify the interface with any CRUD methods
@@ -41,6 +45,22 @@ export interface IStorage {
   // Categories
   getAllCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;
+  
+  // Users
+  createUser(user: InsertUser): Promise<User>;
+  getUserById(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  
+  // Wishlist
+  getWishlistItems(userId: number): Promise<WishlistItem[]>;
+  getWishlistItemWithProduct(userId: number): Promise<(WishlistItem & { product: Product })[]>;
+  addToWishlist(item: InsertWishlistItem): Promise<WishlistItem>;
+  removeFromWishlist(id: number): Promise<void>;
+  isProductInWishlist(userId: number, productId: number): Promise<boolean>;
+  
+  // Session store for authentication
+  sessionStore: any;
 }
 
 export class MemStorage implements IStorage {
@@ -49,11 +69,16 @@ export class MemStorage implements IStorage {
   private orders: Map<number, Order>;
   private orderItems: Map<number, OrderItem>;
   private categories: Map<number, Category>;
+  private users: Map<number, User>;
+  private wishlistItems: Map<number, WishlistItem>;
   private productIdCounter: number;
   private cartItemIdCounter: number;
   private orderIdCounter: number;
   private orderItemIdCounter: number;
   private categoryIdCounter: number;
+  private userIdCounter: number;
+  private wishlistItemIdCounter: number;
+  public sessionStore: any;
 
   constructor() {
     this.products = new Map();
@@ -61,16 +86,112 @@ export class MemStorage implements IStorage {
     this.orders = new Map();
     this.orderItems = new Map();
     this.categories = new Map();
+    this.users = new Map();
+    this.wishlistItems = new Map();
     this.productIdCounter = 1;
     this.cartItemIdCounter = 1;
     this.orderIdCounter = 1;
     this.orderItemIdCounter = 1;
     this.categoryIdCounter = 1;
+    this.userIdCounter = 1;
+    this.wishlistItemIdCounter = 1;
+    
+    // Create session store for authentication
+    // We'll set this up in the auth.ts file instead
+    this.sessionStore = null;
 
     // Initialize with some categories
     this.initializeCategories();
     // Initialize with some products
     this.initializeProducts();
+    // Initialize users (customer and seller)
+    this.initializeUsers();
+  }
+  
+  private initializeUsers(): void {
+    const users: InsertUser[] = [
+      {
+        username: "customer",
+        password: "customer123", // This will be hashed when actually registering
+        email: "customer@example.com",
+        fullName: "Demo Customer",
+        role: "customer"
+      },
+      {
+        username: "seller",
+        password: "seller123", // This will be hashed when actually registering
+        email: "seller@example.com",
+        fullName: "Demo Seller",
+        role: "seller"
+      }
+    ];
+    
+    users.forEach(user => {
+      this.createUser(user);
+    });
+  }
+  
+  // User methods
+  async createUser(user: InsertUser): Promise<User> {
+    const id = this.userIdCounter++;
+    const createdAt = new Date();
+    const newUser: User = { ...user, id, createdAt };
+    this.users.set(id, newUser);
+    return newUser;
+  }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.username === username);
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+  
+  // Wishlist methods
+  async getWishlistItems(userId: number): Promise<WishlistItem[]> {
+    return Array.from(this.wishlistItems.values()).filter(item => item.userId === userId);
+  }
+  
+  async getWishlistItemWithProduct(userId: number): Promise<(WishlistItem & { product: Product })[]> {
+    const wishlistItems = await this.getWishlistItems(userId);
+    return await Promise.all(
+      wishlistItems.map(async (item) => {
+        const product = (await this.getProductById(item.productId))!;
+        return { ...item, product };
+      })
+    );
+  }
+  
+  async addToWishlist(item: InsertWishlistItem): Promise<WishlistItem> {
+    // Check if the item already exists in the wishlist
+    const existingItem = Array.from(this.wishlistItems.values()).find(
+      (wishlistItem) => wishlistItem.productId === item.productId && wishlistItem.userId === item.userId
+    );
+    
+    if (existingItem) {
+      return existingItem;
+    }
+    
+    const id = this.wishlistItemIdCounter++;
+    const createdAt = new Date();
+    const newItem: WishlistItem = { ...item, id, createdAt };
+    this.wishlistItems.set(id, newItem);
+    return newItem;
+  }
+  
+  async removeFromWishlist(id: number): Promise<void> {
+    this.wishlistItems.delete(id);
+  }
+  
+  async isProductInWishlist(userId: number, productId: number): Promise<boolean> {
+    return Array.from(this.wishlistItems.values()).some(
+      item => item.userId === userId && item.productId === productId
+    );
   }
 
   private initializeCategories(): void {
