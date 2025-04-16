@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { getDeliveryDates, formatDeliveryDate, timeSlots } from "@/lib/utils";
 import { Truck, Clock } from "lucide-react";
@@ -20,33 +20,23 @@ export default function DeliveryTimeSelector({
   selectedTimeSlot,
   selectedDeliveryType,
 }: DeliveryTimeSelectorProps) {
-  const deliveryDates = getDeliveryDates(1, 7);
-  const [availableDates, setAvailableDates] = useState<{ 
-    date: Date; 
-    formattedDate: ReturnType<typeof formatDeliveryDate>;
-    available: boolean;
-  }[]>([]);
-
+  // Use a ref to track initialization
+  const isInitialized = useRef(false);
+  
+  // Format delivery dates only once 
+  const formattedDates = useRef(getDeliveryDates(1, 7).map(date => ({
+    date,
+    formattedDate: formatDeliveryDate(date),
+    available: true, // All dates are available by default
+  })));
+  
+  // Initialize default date selection only once
   useEffect(() => {
-    // Format all delivery dates
-    const dates = deliveryDates.map(date => ({
-      date,
-      formattedDate: formatDeliveryDate(date),
-      available: true, // All dates are available by default
-    }));
-    
-    setAvailableDates(dates);
-
-    // Run this only once on initial render
-  }, [deliveryDates]);
-
-  // Separate effect to handle default date selection
-  useEffect(() => {
-    // If no date is selected, select the first available one
-    if (!selectedDate && availableDates.length > 0) {
-      onDateChange(availableDates[0].formattedDate.fullDate);
+    if (!isInitialized.current && !selectedDate && formattedDates.current.length > 0) {
+      onDateChange(formattedDates.current[0].formattedDate.fullDate);
+      isInitialized.current = true;
     }
-  }, [availableDates, onDateChange, selectedDate]);
+  }, [selectedDate, onDateChange]);
 
   // Check if a specific time slot should be disabled
   const isTimeSlotDisabled = (slotId: number): boolean => {
@@ -93,7 +83,7 @@ export default function DeliveryTimeSelector({
           </h3>
           
           <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-            {availableDates.map(({ date, formattedDate, available }) => (
+            {formattedDates.current.map(({ date, formattedDate, available }) => (
               <Button
                 key={date.toISOString()}
                 type="button"
