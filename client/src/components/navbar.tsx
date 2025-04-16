@@ -84,25 +84,25 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link to="/" className="text-xl font-bold">
-          Uzum Market
+          Uzum Market 2.0
         </Link>
 
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           <Link to="/" className="font-medium hover:text-primary transition-colors">
-            Home
+            Bosh sahifa
           </Link>
           <Link to="/category/electronics" className="font-medium hover:text-primary transition-colors">
-            Electronics
+            Elektronika
           </Link>
           <Link to="/category/fashion" className="font-medium hover:text-primary transition-colors">
-            Fashion
+            Kiyim-kechak
           </Link>
           <Link to="/category/home" className="font-medium hover:text-primary transition-colors">
-            Home & Garden
+            Uy jihozlari
           </Link>
           <Link to="/category/books" className="font-medium hover:text-primary transition-colors">
-            Books
+            Kitoblar
           </Link>
         </nav>
 
@@ -117,11 +117,11 @@ export default function Navbar() {
             </SheetTrigger>
             <SheetContent side="top" className="h-[150px]">
               <SheetHeader className="mb-4">
-                <SheetTitle>Search</SheetTitle>
+                <SheetTitle>Qidirish</SheetTitle>
               </SheetHeader>
               <div className="flex items-center space-x-2">
                 <Input 
-                  placeholder="Search products..." 
+                  placeholder="Mahsulotlarni qidiring..." 
                   className="flex-1" 
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -130,7 +130,7 @@ export default function Navbar() {
                     }
                   }}
                 />
-                <Button>Search</Button>
+                <Button>Qidirish</Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -158,23 +158,23 @@ export default function Navbar() {
                   </div>
                   <DropdownMenuSeparator />
                   {user.role === "seller" ? (
-                    <DropdownMenuItem onClick={() => navigate("/seller")}>
+                    <DropdownMenuItem onClick={() => navigate("/seller-page")}>
                       <Store className="h-4 w-4 mr-2" />
-                      <span>Seller Dashboard</span>
+                      <span>Sotuvchi paneli</span>
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={() => navigate("/account")}>
                       <UserCircle className="h-4 w-4 mr-2" />
-                      <span>My Account</span>
+                      <span>Mening hisobim</span>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => navigate("/account")}>
                     <Heart className="h-4 w-4 mr-2" />
-                    <span>Wishlist</span>
+                    <span>Istaklar ro'yxati</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/account?tab=settings")}>
                     <Settings className="h-4 w-4 mr-2" />
-                    <span>Settings</span>
+                    <span>Sozlamalar</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -182,14 +182,14 @@ export default function Navbar() {
                     disabled={logoutMutation.isPending}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    <span>Logout</span>
+                    <span>Chiqish</span>
                   </DropdownMenuItem>
                 </>
               ) : (
                 <>
                   <DropdownMenuItem onClick={() => navigate("/auth")}>
                     <User className="h-4 w-4 mr-2" />
-                    <span>Login / Register</span>
+                    <span>Kirish / Ro'yxatdan o'tish</span>
                   </DropdownMenuItem>
                 </>
               )}

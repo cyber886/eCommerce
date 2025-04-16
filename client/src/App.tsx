@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,30 +14,10 @@ import { CartProvider } from "@/hooks/use-cart";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
-
-// Navigation guard for seller page
-const SellerRoute = ({ path, component: Component }: { path: string, component: React.ComponentType }) => {
-  const { user, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <Route path={path}><div>Loading...</div></Route>;
-  }
-  
-  if (!user) {
-    return <Route path={path}><Route path={path}><Redirect to="/auth" /></Route></Route>;
-  }
-  
-  if (user.role !== "seller") {
-    return <Route path={path}><Route path={path}><Redirect to="/account" /></Route></Route>;
-  }
-  
-  return <Route path={path} component={Component} />;
-};
-
-import { Redirect } from "wouter";
+import { Loader2 } from "lucide-react";
 
 function Router() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   
   return (
     <Switch>
@@ -46,9 +26,21 @@ function Router() {
       <Route path="/category/:category" component={CategoryPage}/>
       <ProtectedRoute path="/checkout" component={CheckoutPage}/>
       <ProtectedRoute path="/account" component={AccountPage}/>
-      <Route path="/auth" component={AuthPage}/>
-      <Route path="/seller">
-        {user?.role === "seller" ? <SellerPage /> : <Redirect to="/auth" />}
+      <Route path="/auth">
+        {user ? <Redirect to="/" /> : <AuthPage />}
+      </Route>
+      <Route path="/seller-page">
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !user ? (
+          <Redirect to="/auth" />
+        ) : user.role !== "seller" ? (
+          <Redirect to="/account" />
+        ) : (
+          <SellerPage />
+        )}
       </Route>
       <Route component={NotFound} />
     </Switch>
