@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShoppingBag, Store } from "lucide-react";
 
+// Form validation schemas
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -20,21 +21,38 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  email: z.string().email("Please enter a valid email"),
-  fullName: z.string().min(3, "Full name must be at least 3 characters"),
-  role: z.enum(["customer", "seller"]),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  role: z.enum(["customer", "seller"], {
+    required_error: "Please select an account type",
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<string>("login");
-  const [, setLocation] = useLocation();
+  const [tab, setTab] = useState<"login" | "register">("login");
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
-  
+
+  // Redirect if already logged in
+  if (user) {
+    if (user.role === "seller") {
+      navigate("/seller");
+    } else {
+      navigate("/account");
+    }
+    return null;
+  }
+
+  // Login form
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -43,68 +61,75 @@ export default function AuthPage() {
     },
   });
 
+  // Register form
   const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
-      password: "",
       email: "",
+      password: "",
+      confirmPassword: "",
       fullName: "",
       role: "customer",
     },
   });
 
-  // If already logged in, redirect to home
-  if (user) {
-    setLocation("/");
-    return null;
-  }
-
   const onLogin = async (values: LoginValues) => {
     try {
       await loginMutation.mutateAsync(values);
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      setLocation("/");
+      // Navigate to appropriate page on success
+      // (this doesn't need to be explicit, useAuth will update the user state and the
+      // redirect at the top of the component will trigger)
     } catch (error) {
-      // Error is handled in the mutation itself
+      // Error is handled by the mutation itself
     }
   };
 
   const onRegister = async (values: RegisterValues) => {
     try {
-      await registerMutation.mutateAsync(values);
-      toast({
-        title: "Registration successful",
-        description: "Welcome to our platform!",
+      await registerMutation.mutateAsync({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        fullName: values.fullName,
+        role: values.role,
       });
-      setLocation("/");
+      // Navigate to appropriate page on success
+      // (this doesn't need to be explicit, useAuth will update the user state and the
+      // redirect at the top of the component will trigger)
     } catch (error) {
-      // Error is handled in the mutation itself
+      // Error is handled by the mutation itself
     }
   };
 
+  const isPending = loginMutation.isPending || registerMutation.isPending;
+
   return (
-    <div className="container mx-auto py-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome to Uzum Market</CardTitle>
-              <CardDescription>Sign in to your account or create a new one</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="register">Register</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="login">
+    <div className="flex min-h-screen">
+      {/* Left side - Auth form */}
+      <div className="flex flex-col justify-center w-full px-6 py-12 lg:w-1/2 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <h2 className="text-center text-3xl font-bold tracking-tight">
+            {tab === "login" ? "Sign in to your account" : "Create a new account"}
+          </h2>
+        </div>
+
+        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
+          <Tabs value={tab} onValueChange={(value) => setTab(value as "login" | "register")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sign In</CardTitle>
+                  <CardDescription>Enter your credentials to access your account</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                    <form id="login-form" onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
                         name="username"
@@ -118,7 +143,6 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={loginForm.control}
                         name="password"
@@ -126,62 +150,42 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input type="password" placeholder="Enter your password" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full"
-                        disabled={loginMutation.isPending}
-                      >
-                        {loginMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Logging in...
-                          </>
-                        ) : (
-                          "Sign In"
-                        )}
-                      </Button>
                     </form>
                   </Form>
-                </TabsContent>
-                
-                <TabsContent value="register">
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    type="submit" 
+                    form="login-form" 
+                    className="w-full" 
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : "Sign In"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="register">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Account</CardTitle>
+                  <CardDescription>Register for a new account</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your full name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="your@email.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
+                    <form id="register-form" onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                       <FormField
                         control={registerForm.control}
                         name="username"
@@ -195,7 +199,32 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      
+                      <FormField
+                        control={registerForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter your full name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Enter your email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={registerForm.control}
                         name="password"
@@ -203,117 +232,119 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input type="password" placeholder="Create a password" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
+                      <FormField
+                        control={registerForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Confirm your password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={registerForm.control}
                         name="role"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Account Type</FormLabel>
-                            <div className="grid grid-cols-2 gap-4 mt-2">
-                              <Button
-                                type="button"
-                                variant={field.value === "customer" ? "default" : "outline"}
-                                className="w-full"
-                                onClick={() => registerForm.setValue("role", "customer")}
-                              >
-                                Customer
-                              </Button>
-                              <Button
-                                type="button"
-                                variant={field.value === "seller" ? "default" : "outline"}
-                                className="w-full"
-                                onClick={() => registerForm.setValue("role", "seller")}
-                              >
-                                Seller
-                              </Button>
-                            </div>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select account type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="customer">
+                                  <div className="flex items-center">
+                                    <ShoppingBag className="mr-2 h-4 w-4" />
+                                    <span>Customer (Buyer)</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="seller">
+                                  <div className="flex items-center">
+                                    <Store className="mr-2 h-4 w-4" />
+                                    <span>Seller (Merchant)</span>
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full"
-                        disabled={registerMutation.isPending}
-                      >
-                        {registerMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating account...
-                          </>
-                        ) : (
-                          "Create Account"
-                        )}
-                      </Button>
                     </form>
                   </Form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <p className="text-sm text-muted-foreground">
-                {activeTab === "login" 
-                  ? "Don't have an account?" 
-                  : "Already have an account?"}
-                {" "}
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto font-semibold" 
-                  onClick={() => setActiveTab(activeTab === "login" ? "register" : "login")}
-                >
-                  {activeTab === "login" ? "Sign Up" : "Sign In"}
-                </Button>
-              </p>
-            </CardFooter>
-          </Card>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    type="submit"
+                    form="register-form"
+                    className="w-full"
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : "Create Account"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-        
-        <div className="hidden md:block">
-          <div className="h-full flex flex-col justify-center">
-            <h2 className="text-3xl font-bold mb-4">Uzum Market</h2>
-            <p className="text-lg mb-6">
-              The ultimate shopping experience with delivery time optimization. Choose from thousands of products and get them delivered at your preferred time.
+      </div>
+
+      {/* Right side - Hero section */}
+      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-r from-primary/10 to-primary/5">
+        <div className="flex flex-col justify-center h-full px-16 py-12">
+          <div className="space-y-6">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Shop smarter, not harder
+            </h1>
+            <p className="text-lg">
+              Join Uzum Market, the leading e-commerce platform with advanced time optimization for deliveries.
             </p>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary">✓</span>
                 </div>
-                <div>
-                  <h3 className="font-medium">Smart Delivery Scheduling</h3>
-                  <p className="text-sm text-muted-foreground">Choose your preferred delivery date and time</p>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium">Convenient Delivery Scheduling</h3>
+                  <p className="text-muted-foreground">Choose your preferred delivery time windows that fit your schedule</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary">✓</span>
                 </div>
-                <div>
-                  <h3 className="font-medium">Thousands of Products</h3>
-                  <p className="text-sm text-muted-foreground">Shop from a wide variety of categories</p>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium">Real-Time Order Tracking</h3>
+                  <p className="text-muted-foreground">Keep track of your orders in real-time from purchase to delivery</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary">✓</span>
                 </div>
-                <div>
-                  <h3 className="font-medium">Secure Shopping</h3>
-                  <p className="text-sm text-muted-foreground">Create an account and track your orders</p>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium">Secure Shopping Experience</h3>
+                  <p className="text-muted-foreground">Shop with confidence with our secure payment options</p>
                 </div>
               </div>
             </div>
