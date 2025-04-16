@@ -37,11 +37,16 @@ export default function DeliveryTimeSelector({
     
     setAvailableDates(dates);
 
+    // Run this only once on initial render
+  }, [deliveryDates]);
+
+  // Separate effect to handle default date selection
+  useEffect(() => {
     // If no date is selected, select the first available one
-    if (!selectedDate && dates.length > 0) {
-      onDateChange(dates[0].formattedDate.fullDate);
+    if (!selectedDate && availableDates.length > 0) {
+      onDateChange(availableDates[0].formattedDate.fullDate);
     }
-  }, [deliveryDates, onDateChange, selectedDate]);
+  }, [availableDates, onDateChange, selectedDate]);
 
   // Check if a specific time slot should be disabled
   const isTimeSlotDisabled = (slotId: number): boolean => {
