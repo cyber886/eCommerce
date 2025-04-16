@@ -7,7 +7,10 @@ import HomePage from "@/pages/home-page";
 import ProductPage from "@/pages/product-page";
 import CategoryPage from "@/pages/category-page";
 import CheckoutPage from "@/pages/checkout-page";
+import AuthPage from "@/pages/auth-page";
 import { CartProvider } from "@/hooks/use-cart";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
   return (
@@ -15,7 +18,8 @@ function Router() {
       <Route path="/" component={HomePage}/>
       <Route path="/product/:id" component={ProductPage}/>
       <Route path="/category/:category" component={CategoryPage}/>
-      <Route path="/checkout" component={CheckoutPage}/>
+      <ProtectedRoute path="/checkout" component={CheckoutPage}/>
+      <Route path="/auth" component={AuthPage}/>
       <Route component={NotFound} />
     </Switch>
   );
@@ -24,10 +28,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Router />
-        <Toaster />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router />
+          <Toaster />
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
