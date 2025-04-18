@@ -10,6 +10,7 @@ import CheckoutPage from "@/pages/checkout-page";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
 import SellerPage from "@/pages/seller-page";
+import OrderTrackingPage from "@/pages/order-tracking-page";
 import { CartProvider } from "@/hooks/use-cart";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/category/:category" component={CategoryPage}/>
       <ProtectedRoute path="/checkout" component={CheckoutPage}/>
       <ProtectedRoute path="/account" component={AccountPage}/>
+      <Route path="/tracking" component={OrderTrackingPage}/>
       <Route path="/auth">
         {user ? <Redirect to="/" /> : <AuthPage />}
       </Route>

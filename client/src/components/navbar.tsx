@@ -104,6 +104,9 @@ export default function Navbar() {
           <Link to="/category/books" className="font-medium hover:text-primary transition-colors">
             Kitoblar
           </Link>
+          <Link to="/tracking" className="font-medium hover:text-primary transition-colors">
+            Kuzatuv
+          </Link>
         </nav>
 
         {/* Right side buttons */}
