@@ -12,7 +12,9 @@ import {
   User,
   InsertUser,
   WishlistItem,
-  InsertWishlistItem
+  InsertWishlistItem,
+  Review,
+  InsertReview
 } from "@shared/schema";
 
 // modify the interface with any CRUD methods
@@ -59,6 +61,15 @@ export interface IStorage {
   removeFromWishlist(id: number): Promise<void>;
   isProductInWishlist(userId: number, productId: number): Promise<boolean>;
   
+  // Reviews
+  getReviewsByProductId(productId: number): Promise<Review[]>;
+  getReviewsByUserId(userId: number): Promise<Review[]>;
+  getReviewWithUserDetails(productId: number): Promise<(Review & { username: string })[]>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateReview(id: number, review: Partial<InsertReview>): Promise<Review | undefined>;
+  deleteReview(id: number): Promise<void>;
+  getAverageRatingByProductId(productId: number): Promise<number>;
+  
   // Session store for authentication
   sessionStore: any;
 }
@@ -71,6 +82,7 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private users: Map<number, User>;
   private wishlistItems: Map<number, WishlistItem>;
+  private reviews: Map<number, Review>;
   private productIdCounter: number;
   private cartItemIdCounter: number;
   private orderIdCounter: number;
@@ -78,6 +90,7 @@ export class MemStorage implements IStorage {
   private categoryIdCounter: number;
   private userIdCounter: number;
   private wishlistItemIdCounter: number;
+  private reviewIdCounter: number;
   public sessionStore: any;
 
   constructor() {
@@ -88,6 +101,7 @@ export class MemStorage implements IStorage {
     this.categories = new Map();
     this.users = new Map();
     this.wishlistItems = new Map();
+    this.reviews = new Map();
     this.productIdCounter = 1;
     this.cartItemIdCounter = 1;
     this.orderIdCounter = 1;
@@ -95,6 +109,7 @@ export class MemStorage implements IStorage {
     this.categoryIdCounter = 1;
     this.userIdCounter = 1;
     this.wishlistItemIdCounter = 1;
+    this.reviewIdCounter = 1;
     
     // Create session store for authentication
     // We'll set this up in the auth.ts file instead
@@ -440,5 +455,7 @@ export class MemStorage implements IStorage {
     return newCategory;
   }
 }
+
+
 
 export const storage = new MemStorage();

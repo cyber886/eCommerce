@@ -116,6 +116,21 @@ export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({
   createdAt: true,
 });
 
+// Reviews model
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  productId: integer("product_id").notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
@@ -137,3 +152,6 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type WishlistItem = typeof wishlistItems.$inferSelect;
 export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;
+
+export type Review = typeof reviews.$inferSelect;
+export type InsertReview = z.infer<typeof insertReviewSchema>;
