@@ -345,19 +345,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { 
             status: "order_placed", 
             location: "Online", 
-            timestamp: new Date(order.createdAt).toISOString(),
+            timestamp: new Date(order.createdAt || new Date()).toISOString(),
             description: "Order placed successfully"
           },
           { 
             status: "processing", 
             location: "Warehouse", 
-            timestamp: new Date(new Date(order.createdAt).getTime() + 1000*60*60).toISOString(),
+            timestamp: new Date(new Date(order.createdAt || new Date()).getTime() + 1000*60*60).toISOString(),
             description: "Order picked and packed" 
           },
           { 
             status: "in_transit", 
             location: "Tashkent Distribution Center", 
-            timestamp: new Date(new Date(order.createdAt).getTime() + 1000*60*60*3).toISOString(),
+            timestamp: new Date(new Date(order.createdAt || new Date()).getTime() + 1000*60*60*3).toISOString(),
             description: "Order shipped" 
           }
         ]

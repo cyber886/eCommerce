@@ -146,7 +146,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     setEditText(review.comment || "");
   };
 
-  const formatDate = (dateString: Date) => {
+  const formatDate = (dateString: Date | null) => {
+    if (!dateString) return "Unknown date";
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
