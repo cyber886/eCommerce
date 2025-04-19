@@ -45,7 +45,7 @@ export default function AuthPage() {
   // Redirect if already logged in
   if (user) {
     if (user.role === "seller") {
-      navigate("/seller");
+      navigate("/seller-page");
     } else {
       navigate("/account");
     }
@@ -317,7 +317,7 @@ export default function AuthPage() {
               Shop smarter, not harder
             </h1>
             <p className="text-lg">
-              Join Uzum Market, the leading e-commerce platform with advanced time optimization for deliveries.
+              Join E-Market, the leading e-commerce platform with advanced time optimization for deliveries.
             </p>
             <div className="space-y-4">
               <div className="flex items-start">

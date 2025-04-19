@@ -19,7 +19,7 @@ type AuthContextType = {
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -52,10 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
+      // Store the password temporarily to use it for auto-login
+      const userData = await res.json();
+      return { user: userData, password: credentials.password };
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+    onSuccess: (data: { user: SelectUser, password: string }) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      // After successful registration, automatically login with the same credentials
+      loginMutation.mutate({
+        username: data.user.username,
+        password: data.password
+      });
     },
     onError: (error: Error) => {
       toast({
