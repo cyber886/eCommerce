@@ -4,6 +4,7 @@ import Navbar from "@/components/navbar";
 import CategoryNav from "@/components/category-nav";
 import Footer from "@/components/footer";
 import CartSidebar from "@/components/cart-sidebar";
+import ProductReviews from "@/components/product-reviews";
 import { useCart } from "@/hooks/use-cart";
 import { formatCurrency, getDiscountPercentage } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

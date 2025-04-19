@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
-import { insertOrderSchema, insertCartItemSchema, insertWishlistItemSchema } from "@shared/schema";
+import { insertOrderSchema, insertCartItemSchema, insertWishlistItemSchema, insertReviewSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
@@ -391,6 +391,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(ordersWithItems);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch purchase history" });
+    }
+  });
+
+  // Reviews routes
+  app.get("/api/products/:productId/reviews", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: "Invalid product ID" });
+      }
+
+      const reviews = await storage.getReviewWithUserDetails(productId);
+      res.json(reviews);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  app.post("/api/reviews", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const userId = (req.user as Express.User).id;
+      const reviewData = { ...req.body, userId };
+      const validatedData = insertReviewSchema.parse(reviewData);
+      const review = await storage.createReview(validatedData);
+      
+      res.status(201).json(review);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: fromZodError(error).message });
+      }
+      res.status(500).json({ error: "Failed to create review" });
+    }
+  });
+
+  app.put("/api/reviews/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid review ID" });
+      }
+
+      const reviewData = req.body;
+      const updatedReview = await storage.updateReview(id, reviewData);
+      
+      if (!updatedReview) {
+        return res.status(404).json({ error: "Review not found" });
+      }
+      
+      res.json(updatedReview);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: fromZodError(error).message });
+      }
+      res.status(500).json({ error: "Failed to update review" });
+    }
+  });
+
+  app.delete("/api/reviews/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid review ID" });
+      }
+
+      await storage.deleteReview(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete review" });
+    }
+  });
+
+  app.get("/api/products/:productId/rating", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: "Invalid product ID" });
+      }
+
+      const averageRating = await storage.getAverageRatingByProductId(productId);
+      res.json({ productId, averageRating });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch product rating" });
     }
   });
 

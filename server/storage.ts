@@ -454,8 +454,53 @@ export class MemStorage implements IStorage {
     this.categories.set(id, newCategory);
     return newCategory;
   }
+  // Reviews methods
+  async getReviewsByProductId(productId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(review => review.productId === productId);
+  }
+
+  async getReviewsByUserId(userId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(review => review.userId === userId);
+  }
+
+  async getReviewWithUserDetails(productId: number): Promise<(Review & { username: string })[]> {
+    const reviews = await this.getReviewsByProductId(productId);
+    return await Promise.all(
+      reviews.map(async (review) => {
+        const user = (await this.getUserById(review.userId))!;
+        return { ...review, username: user.username };
+      })
+    );
+  }
+
+  async createReview(review: InsertReview): Promise<Review> {
+    const id = this.reviewIdCounter++;
+    const createdAt = new Date();
+    const newReview: Review = { ...review, id, createdAt };
+    this.reviews.set(id, newReview);
+    return newReview;
+  }
+
+  async updateReview(id: number, reviewData: Partial<InsertReview>): Promise<Review | undefined> {
+    const review = this.reviews.get(id);
+    if (!review) return undefined;
+
+    const updatedReview: Review = { ...review, ...reviewData };
+    this.reviews.set(id, updatedReview);
+    return updatedReview;
+  }
+
+  async deleteReview(id: number): Promise<void> {
+    this.reviews.delete(id);
+  }
+
+  async getAverageRatingByProductId(productId: number): Promise<number> {
+    const reviews = await this.getReviewsByProductId(productId);
+    if (reviews.length === 0) return 0;
+    
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return totalRating / reviews.length;
+  }
 }
-
-
 
 export const storage = new MemStorage();
