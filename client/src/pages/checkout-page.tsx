@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CartItem, Product, insertOrderSchema } from "@shared/schema";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import Navbar from "@/components/navbar";
@@ -48,6 +49,7 @@ type CheckoutFormValues = Omit<z.infer<typeof checkoutFormSchema>, "sessionId" |
 export default function CheckoutPage() {
   const [, navigate] = useLocation();
   const { cartItems, cartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isOrderComplete, setIsOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -64,19 +66,21 @@ export default function CheckoutPage() {
   const grandTotal = cartTotal + tax + shippingCost;
 
   // If cart is empty, redirect to home page
-  useQuery({
+  const { data: cartData } = useQuery<CartItemWithProduct[]>({
     queryKey: ["/api/cart"],
-    onSuccess: (data: CartItemWithProduct[]) => {
-      if (data.length === 0) {
-        toast({
-          title: "Cart is empty",
-          description: "You need to add items to your cart first",
-          variant: "destructive",
-        });
-        navigate("/");
-      }
-    },
   });
+  
+  // Check if cart is empty and redirect
+  useEffect(() => {
+    if (cartData && cartData.length === 0) {
+      toast({
+        title: "Cart is empty",
+        description: "You need to add items to your cart first",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [cartData, toast, navigate]);
 
   // Form setup
   const form = useForm<CheckoutFormValues>({
