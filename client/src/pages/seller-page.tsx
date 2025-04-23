@@ -164,9 +164,25 @@ export default function SellerPage() {
     setShowProductDialog(true);
   };
 
+  const [deliveryStatus, setDeliveryStatus] = useState<Record<number, 'pending' | 'accepted' | 'rejected'>>({
+    1001: 'pending',
+    1002: 'pending',
+    1003: 'pending',
+    1004: 'pending',
+  });
+  
   const openOrderDetailsDialog = (order: any) => {
     setSelectedOrder(order);
     setShowOrderDetailsDialog(true);
+  };
+  
+  const handleAcceptDelivery = (orderId: number) => {
+    // In a real implementation, this would send an API request
+    setDeliveryStatus(prev => ({
+      ...prev,
+      [orderId]: 'accepted'
+    }));
+    console.log("Accepted delivery time for order:", orderId);
   };
 
   // Status badge component
@@ -697,8 +713,6 @@ export default function SellerPage() {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Buyurtma ma'lumotlari</h3>
                   <p><span className="font-medium">Buyurtma sanasi:</span> {selectedOrder.date}</p>
-                  <p><span className="font-medium">Yetkazib berish sanasi:</span> {selectedOrder.deliveryDate}</p>
-                  <p><span className="font-medium">Yetkazib berish vaqti:</span> {selectedOrder.deliveryTimeSlot}</p>
                   <p><span className="font-medium">To'lov usuli:</span> {selectedOrder.paymentMethod === "card" ? "Karta" : "Naqd pul"}</p>
                   <p className="mt-2"><span className="font-medium">Holati:</span> <OrderStatusBadge status={selectedOrder.status} /></p>
                 </div>
