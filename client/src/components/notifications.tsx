@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useTranslation } from "react-i18next";
 
 export type Notification = {
   id: string;
@@ -29,6 +30,7 @@ interface NotificationsProps {
 export default function Notifications({ role, onViewOrder }: NotificationsProps) {
   const { notifications, markAsRead, markAllAsRead, addNotification } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   // Mock notifications for sellers - in a real app, we'd fetch these from an API
   useEffect(() => {
@@ -128,7 +130,7 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
       </PopoverTrigger>
       <PopoverContent className="w-[350px] p-0" align="end">
         <div className="flex items-center justify-between px-4 py-2 border-b">
-          <h3 className="font-medium">Bildirishnomalar</h3>
+          <h3 className="font-medium">{t('notifications')}</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -136,13 +138,13 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
               className="text-xs"
               onClick={markAllAsRead}
             >
-              Barchasini o'qilgan deb belgilash
+              {t('markAllAsRead')}
             </Button>
           )}
         </div>
         {notifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
-            Bildirishnomalar yo'q
+            {t('noNotifications')}
           </div>
         ) : (
           <div className="max-h-[300px] overflow-y-auto">
@@ -182,7 +184,7 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
                       className="px-0 h-auto text-xs mt-1"
                       onClick={() => handleViewOrder(notification.orderId!, notification.id)}
                     >
-                      Buyurtmani ko'rish
+                      {t('viewOrder')}
                     </Button>
                   )}
                 </div>

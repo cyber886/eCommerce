@@ -113,6 +113,8 @@ const resources = {
       "newProductSelected": "New product selected",
       "productAdded": "Product added to cart",
       "quantity": "Quantity",
+      "wishlist": "Wishlist",
+      "viewOrder": "View Order",
     }
   },
   ru: {
@@ -221,6 +223,8 @@ const resources = {
       "newProductSelected": "Выбран новый товар",
       "productAdded": "Товар добавлен в корзину",
       "quantity": "Количество",
+      "wishlist": "Избранное",
+      "viewOrder": "Посмотреть заказ",
     }
   },
   uz: {
@@ -329,6 +333,8 @@ const resources = {
       "newProductSelected": "Yangi mahsulot tanlandi",
       "productAdded": "Mahsulot savatchaga qo'shildi",
       "quantity": "Miqdori",
+      "wishlist": "Sevimlilar",
+      "viewOrder": "Buyurtmani ko'rish",
     }
   }
 };

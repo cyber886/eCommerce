@@ -165,8 +165,8 @@ function NavItem({ href, icon, label, expanded }: { href: string; icon: React.Re
 
   return (
     <Link href={href}>
-      <a
-        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+      <button
+        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left ${
           isActive
             ? "bg-primary/10 text-primary"
             : "text-foreground/60 hover:text-foreground hover:bg-muted/80"
@@ -174,7 +174,7 @@ function NavItem({ href, icon, label, expanded }: { href: string; icon: React.Re
       >
         {icon}
         {expanded && <span className="ml-3">{label}</span>}
-      </a>
+      </button>
     </Link>
   );
 }
