@@ -38,7 +38,10 @@ export default function SellerPage() {
     
     // Get all localStorage keys
     const keys = Object.keys(localStorage);
+    
+    // Check for both product selections and delivery time selections
     const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
+    const deliverySelectionKeys = keys.filter(key => key.startsWith('delivery_time_selected_'));
     
     // Process each product selection and send notification
     productSelectionKeys.forEach(key => {
@@ -52,11 +55,42 @@ export default function SellerPage() {
             type: "order",
           });
           
+          console.log("Product selection notification processed for seller");
+          
           // Remove the localStorage item after processing
           localStorage.removeItem(key);
         }
       } catch (err) {
         console.error("Failed to process product selection notification", err);
+      }
+    });
+    
+    // Process each delivery time selection and send notification
+    deliverySelectionKeys.forEach(key => {
+      try {
+        const deliveryData = JSON.parse(localStorage.getItem(key) || '');
+        if (deliveryData) {
+          // Add notification for delivery time selection
+          addNotification({
+            title: "Yangi yetkazib berish vaqti tanlandi",
+            message: `Mijoz ${deliveryData.customerName} buyurtma #${deliveryData.orderId} uchun yetkazib berish vaqtini tanladi: ${deliveryData.deliveryDate}, ${deliveryData.deliveryTime}`,
+            type: "delivery",
+            data: {
+              deliveryDate: deliveryData.deliveryDate,
+              deliveryTime: deliveryData.deliveryTime,
+              customerName: deliveryData.customerName,
+              status: 'pending'
+            },
+            orderId: deliveryData.orderId,
+          });
+          
+          console.log("Delivery time notification processed for seller");
+          
+          // Remove the localStorage item after processing
+          localStorage.removeItem(key);
+        }
+      } catch (err) {
+        console.error("Failed to process delivery time notification", err);
       }
     });
   }, [user, addNotification]);
