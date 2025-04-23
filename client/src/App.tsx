@@ -54,12 +54,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CartProvider>
-          <NotificationsProvider>
+        <NotificationsProvider>
+          <CartProvider>
             <Router />
             <Toaster />
-          </NotificationsProvider>
-        </CartProvider>
+          </CartProvider>
+        </NotificationsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -19,12 +20,42 @@ import Notifications, { Notification } from "@/components/notifications";
 export default function SellerPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { user, logoutMutation } = useAuth();
+  const { addNotification } = useNotifications();
   const [, navigate] = useLocation();
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [productAction, setProductAction] = useState<"add" | "edit">("add");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showOrderDetailsDialog, setShowOrderDetailsDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  
+  // Check localStorage for product selections and send notifications
+  useEffect(() => {
+    if (!user || user.role !== "seller") return;
+    
+    // Get all localStorage keys
+    const keys = Object.keys(localStorage);
+    const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
+    
+    // Process each product selection and send notification
+    productSelectionKeys.forEach(key => {
+      try {
+        const selectionData = JSON.parse(localStorage.getItem(key) || '');
+        if (selectionData) {
+          // Add notification for product selection
+          addNotification({
+            title: "Yangi mahsulot tanlandi",
+            message: `${selectionData.productName} mahsuloti savatchaga qo'shildi. Miqdori: ${selectionData.quantity}`,
+            type: "order",
+          });
+          
+          // Remove the localStorage item after processing
+          localStorage.removeItem(key);
+        }
+      } catch (err) {
+        console.error("Failed to process product selection notification", err);
+      }
+    });
+  }, [user, addNotification]);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();

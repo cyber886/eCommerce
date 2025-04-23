@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CartItem, Product } from "@shared/schema";
 
@@ -25,6 +26,7 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Fetch cart items
@@ -54,12 +56,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/cart", { productId, quantity });
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
         title: "Item added to cart",
         description: "Your item has been added to the cart.",
       });
+      
+      // Send notification to seller whenever a product is added to cart
+      try {
+        // Get product details to include in notification
+        const res = await apiRequest("GET", `/api/products/${variables.productId}`);
+        const product = await res.json();
+        
+        // This notification will be visible to sellers when they log in
+        // In a real app, we'd use a back-end notification system with WebSockets
+        // to notify sellers in real-time
+        window.localStorage.setItem(`product_selected_${variables.productId}`, JSON.stringify({
+          productId: variables.productId,
+          productName: product.name,
+          quantity: variables.quantity,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (err) {
+        console.error("Failed to store product selection for seller notification", err);
+      }
     },
     onError: (error: Error) => {
       toast({

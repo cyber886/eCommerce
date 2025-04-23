@@ -63,11 +63,6 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
               deliveryTime: "16:00 - 18:00",
             },
           });
-          
-          // Mark this one as read after adding it
-          setTimeout(() => {
-            markAsRead(notifications[notifications.length - 1].id);
-          }, 50);
         }, 200);
       } else {
         // Buyer notifications would be different
@@ -85,15 +80,10 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
             type: "delivery",
             orderId: 1002,
           });
-          
-          // Mark this one as read
-          setTimeout(() => {
-            markAsRead(notifications[notifications.length - 1].id);
-          }, 50);
         }, 100);
       }
     }
-  }, [role, addNotification, markAsRead, notifications.length]);
+  }, [role, addNotification, notifications.length]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -120,8 +110,6 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
       return `${diffDays} kun oldin`;
     }
   };
-
-  // This function was moved to our useNotifications hook
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
