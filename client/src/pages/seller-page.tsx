@@ -1,21 +1,24 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, LogOut, ShoppingBag, PackageOpen, User, Settings, Bell, FileText, BarChart, PlusCircle, Clock, ArrowUpDown, ShoppingCart, Truck, CheckCircle2, XCircle, Edit, Trash2 } from "lucide-react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { 
+  BarChart, PlusCircle, Clock, ArrowUpDown, 
+  ShoppingCart, Truck, CheckCircle2, XCircle, 
+  Edit, Trash2, LogOut, Loader2
+} from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import DeliveryTimeSelector from "@/components/delivery-time-selector";
-import Notifications, { Notification } from "@/components/notifications";
+import SellerNavbar from "@/components/seller-navbar";
+import Notifications from "@/components/notifications";
 
 export default function SellerPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -56,6 +59,23 @@ export default function SellerPage() {
       }
     });
   }, [user, addNotification]);
+
+  // Parse URL params to get the active tab
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+    
+    const orderId = searchParams.get('order');
+    if (orderId) {
+      const order = recentOrders.find(o => o.id === parseInt(orderId));
+      if (order) {
+        openOrderDetailsDialog(order);
+      }
+    }
+  }, []);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -257,217 +277,92 @@ export default function SellerPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-              {user.fullName?.charAt(0) || user.username.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-2xl font-bold">{user.fullName || user.username}</h1>
-            <p className="text-muted-foreground">{user.email}</p>
-            <p className="text-sm text-muted-foreground mt-1 capitalize">Sotuvchi hisobi</p>
-          </div>
+    <div className="flex h-screen">
+      <SellerNavbar />
+      
+      <div className="flex-1 ml-64 p-8 overflow-y-auto"> {/* Adjust margin to match the width of the sidebar */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Sotuvchi boshqaruv paneli</h1>
+          <p className="text-muted-foreground mt-2">
+            Buyurtmalarni boshqarish va mahsulotlarni nazorat qilish
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Notifications 
-            role="seller"
-            onViewOrder={(orderId) => {
-              const order = recentOrders.find(o => o.id === orderId);
-              if (order) {
-                openOrderDetailsDialog(order);
-              }
-            }}
-          />
-          <Button 
-            variant="outline" 
-            onClick={handleLogout} 
-            className="flex items-center" 
-            disabled={logoutMutation.isPending}
-          >
-            {logoutMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <LogOut className="mr-2 h-4 w-4" />
-            )}
-            Chiqish
-          </Button>
-        </div>
-      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-background border w-full flex justify-start overflow-x-auto">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart className="h-4 w-4" />
-            <span>Boshqaruv paneli</span>
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center gap-2">
-            <ShoppingBag className="h-4 w-4" />
-            <span>Buyurtmalar</span>
-          </TabsTrigger>
-          <TabsTrigger value="products" className="flex items-center gap-2">
-            <PackageOpen className="h-4 w-4" />
-            <span>Mahsulotlar</span>
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span>Profil</span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span>Sozlamalar</span>
-          </TabsTrigger>
-        </TabsList>
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value) => {
+            setActiveTab(value);
+            // Update URL without full page reload
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', value);
+            window.history.pushState({}, '', url);
+          }}
+          className="space-y-6"
+        >
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl">Jami savdo</CardTitle>
+                  <CardDescription>Oylik daromad</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$4,550.75</div>
+                  <p className="text-sm text-green-600 mt-1">↑ 12% o'tgan oyga nisbatan</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl">Buyurtmalar</CardTitle>
+                  <CardDescription>Oylik jami</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">48</div>
+                  <p className="text-sm text-green-600 mt-1">↑ 8% o'tgan oyga nisbatan</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl">Mahsulotlar</CardTitle>
+                  <CardDescription>Jami faol mahsulotlar</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">24</div>
+                  <p className="text-sm text-muted-foreground mt-1">5 ta kam qoldiq</p>
+                </CardContent>
+              </Card>
+            </div>
 
-        <TabsContent value="dashboard" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Jami savdo</CardTitle>
-                <CardDescription>Oylik daromad</CardDescription>
+              <CardHeader>
+                <CardTitle>So'nggi buyurtmalar</CardTitle>
+                <CardDescription>Eng yangi mijoz buyurtmalari</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$4,550.75</div>
-                <p className="text-sm text-green-600 mt-1">↑ 12% o'tgan oyga nisbatan</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Buyurtmalar</CardTitle>
-                <CardDescription>Oylik jami</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">48</div>
-                <p className="text-sm text-green-600 mt-1">↑ 8% o'tgan oyga nisbatan</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Mahsulotlar</CardTitle>
-                <CardDescription>Jami faol mahsulotlar</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-sm text-muted-foreground mt-1">5 ta kam qoldiq</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>So'nggi buyurtmalar</CardTitle>
-              <CardDescription>Eng yangi mijoz buyurtmalari</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Buyurtma ID</TableHead>
-                    <TableHead>Mijoz</TableHead>
-                    <TableHead>Mahsulotlar</TableHead>
-                    <TableHead>Jami</TableHead>
-                    <TableHead>Holati</TableHead>
-                    <TableHead>Sana</TableHead>
-                    <TableHead className="text-right">Amallar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>#{order.id}</TableCell>
-                      <TableCell>{order.customer}</TableCell>
-                      <TableCell>{order.items}</TableCell>
-                      <TableCell>${order.total.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <OrderStatusBadge status={order.status} />
-                      </TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => openOrderDetailsDialog(order)}
-                        >
-                          Ko'rish
-                        </Button>
-                      </TableCell>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Buyurtma ID</TableHead>
+                      <TableHead>Mijoz</TableHead>
+                      <TableHead>Mahsulotlar</TableHead>
+                      <TableHead>Jami</TableHead>
+                      <TableHead>Holati</TableHead>
+                      <TableHead>Sana</TableHead>
+                      <TableHead className="text-right">Amallar</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="orders" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <CardTitle>Buyurtmalar boshqaruvi</CardTitle>
-                  <CardDescription>Mijoz buyurtmalarini boshqaring</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Input placeholder="Buyurtmalarni qidirish..." className="w-[250px]" />
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Filtrlash" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Barcha buyurtmalar</SelectItem>
-                      <SelectItem value="pending">Kutilayotgan</SelectItem>
-                      <SelectItem value="processing">Jarayonda</SelectItem>
-                      <SelectItem value="shipped">Jo'natilgan</SelectItem>
-                      <SelectItem value="delivered">Yetkazilgan</SelectItem>
-                      <SelectItem value="cancelled">Bekor qilingan</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <div className="flex items-center space-x-1">
-                        <span>Buyurtma ID</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead>Mijoz</TableHead>
-                    <TableHead>Mahsulotlar</TableHead>
-                    <TableHead>Jami</TableHead>
-                    <TableHead>
-                      <div className="flex items-center space-x-1">
-                        <span>Holati</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead>
-                      <div className="flex items-center space-x-1">
-                        <span>Sana</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right">Amallar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>#{order.id}</TableCell>
-                      <TableCell>{order.customer}</TableCell>
-                      <TableCell>{order.items}</TableCell>
-                      <TableCell>${order.total.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <OrderStatusBadge status={order.status} />
-                      </TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                  </TableHeader>
+                  <TableBody>
+                    {recentOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>#{order.id}</TableCell>
+                        <TableCell>{order.customer}</TableCell>
+                        <TableCell>{order.items}</TableCell>
+                        <TableCell>${order.total.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <OrderStatusBadge status={order.status} />
+                        </TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell className="text-right">
                           <Button 
                             variant="ghost" 
                             size="sm"
@@ -475,325 +370,290 @@ export default function SellerPage() {
                           >
                             Ko'rish
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => openOrderDetailsDialog(order)}
-                          >
-                            Yangilash
-                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle>Buyurtmalar boshqaruvi</CardTitle>
+                    <CardDescription>Mijoz buyurtmalarini boshqaring</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input placeholder="Buyurtmalarni qidirish..." className="w-[250px]" />
+                    <Select defaultValue="all">
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Filtrlash" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Barcha buyurtmalar</SelectItem>
+                        <SelectItem value="pending">Kutilayotgan</SelectItem>
+                        <SelectItem value="processing">Jarayonda</SelectItem>
+                        <SelectItem value="shipped">Jo'natilgan</SelectItem>
+                        <SelectItem value="delivered">Yetkazilgan</SelectItem>
+                        <SelectItem value="cancelled">Bekor qilingan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <div className="flex items-center space-x-1">
+                          <span>Buyurtma ID</span>
+                          <ArrowUpDown className="h-3 w-3" />
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="products" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <CardTitle>Mahsulotlar boshqaruvi</CardTitle>
-                  <CardDescription>Inventaringizni boshqaring</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => openProductDialog("add")}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Yangi mahsulot qo'shish
-                  </Button>
-                  <Input placeholder="Mahsulotlarni qidirish..." className="w-[250px]" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Mahsulot nomi</TableHead>
-                    <TableHead>Zaxira</TableHead>
-                    <TableHead>Narx</TableHead>
-                    <TableHead>Kategoriya</TableHead>
-                    <TableHead className="text-right">Amallar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>#{product.id}</TableCell>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell>
-                        <span className={product.stock < 10 ? "text-red-600" : "text-green-600"}>
-                          {product.stock}
-                        </span>
-                      </TableCell>
-                      <TableCell>${product.price.toFixed(2)}</TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openProductDialog("edit", product)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Tahrirlash
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => deleteProduct(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            O'chirish
-                          </Button>
+                      </TableHead>
+                      <TableHead>Mijoz</TableHead>
+                      <TableHead>Mahsulotlar</TableHead>
+                      <TableHead>Jami</TableHead>
+                      <TableHead>
+                        <div className="flex items-center space-x-1">
+                          <span>Holati</span>
+                          <ArrowUpDown className="h-3 w-3" />
                         </div>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center space-x-1">
+                          <span>Sana</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-right">Amallar</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </TableHeader>
+                  <TableBody>
+                    {recentOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>#{order.id}</TableCell>
+                        <TableCell>{order.customer}</TableCell>
+                        <TableCell>{order.items}</TableCell>
+                        <TableCell>${order.total.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <OrderStatusBadge status={order.status} />
+                        </TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => openOrderDetailsDialog(order)}
+                            >
+                              Ko'rish
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => openOrderDetailsDialog(order)}
+                            >
+                              Yangilash
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sotuvchi profili</CardTitle>
-              <CardDescription>Sotuvchi ma'lumotlaringizni boshqaring</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-3 items-center gap-4">
-                  <p className="text-sm font-medium">Do'kon nomi</p>
-                  <p className="col-span-2">{user.fullName || user.username}</p>
+          <TabsContent value="products" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle>Mahsulotlar boshqaruvi</CardTitle>
+                    <CardDescription>Inventaringizni boshqaring</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => openProductDialog("add")}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Yangi mahsulot qo'shish
+                    </Button>
+                    <Input placeholder="Mahsulotlarni qidirish..." className="w-[250px]" />
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 items-center gap-4">
-                  <p className="text-sm font-medium">Email</p>
-                  <p className="col-span-2">{user.email}</p>
-                </div>
-                <div className="grid grid-cols-3 items-center gap-4">
-                  <p className="text-sm font-medium">Foydalanuvchi nomi</p>
-                  <p className="col-span-2">{user.username}</p>
-                </div>
-                <div className="grid grid-cols-3 items-center gap-4">
-                  <p className="text-sm font-medium">Hisob turi</p>
-                  <p className="col-span-2 capitalize">{user.role}</p>
-                </div>
-                <div className="grid grid-cols-3 items-center gap-4">
-                  <p className="text-sm font-medium">A'zo bo'lgan vaqt</p>
-                  <p className="col-span-2">{new Date(user.createdAt as unknown as string).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <Button className="mt-4" variant="outline">Profilni tahrirlash</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Mahsulot nomi</TableHead>
+                      <TableHead>Zaxira</TableHead>
+                      <TableHead>Narx</TableHead>
+                      <TableHead>Kategoriya</TableHead>
+                      <TableHead className="text-right">Amallar</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell>#{product.id}</TableCell>
+                        <TableCell>{product.name}</TableCell>
+                        <TableCell>
+                          <span className={product.stock < 10 ? "text-red-600" : "text-green-600"}>
+                            {product.stock}
+                          </span>
+                        </TableCell>
+                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                        <TableCell>{product.category}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => openProductDialog("edit", product)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Tahrirlash
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => deleteProduct(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              O'chirish
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Hisob sozlamalari</CardTitle>
-              <CardDescription>Sotuvchi hisob sozlamalaringizni boshqaring</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Parol</p>
-                    <p className="text-sm text-muted-foreground">Parolingizni o'zgartiring</p>
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Do'kon sozlamalari</CardTitle>
+                <CardDescription>Do'kon uchun asosiy sozlamalarni boshqaring</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="storeName" className="text-right">
+                      Do'kon nomi
+                    </Label>
+                    <Input id="storeName" defaultValue={user.fullName || user.username} className="col-span-3" />
                   </div>
-                  <Button variant="outline">O'zgartirish</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Do'kon ma'lumotlari</p>
-                    <p className="text-sm text-muted-foreground">Do'kon tafsilotlaringizni yangilang</p>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="storeEmail" className="text-right">
+                      Email
+                    </Label>
+                    <Input id="storeEmail" defaultValue={user.email} className="col-span-3" />
                   </div>
-                  <Button variant="outline">Tahrirlash</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">To'lov usullari</p>
-                    <p className="text-sm text-muted-foreground">To'lov sozlamalaringizni boshqaring</p>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="storePhone" className="text-right">
+                      Telefon
+                    </Label>
+                    <Input id="storePhone" defaultValue="+998 90 123 4567" className="col-span-3" />
                   </div>
-                  <Button variant="outline">Sozlash</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Bildirishnomalar</p>
-                    <p className="text-sm text-muted-foreground">Bildirishnoma afzalliklarini sozlang</p>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="storeAddress" className="text-right">
+                      Manzil
+                    </Label>
+                    <Input id="storeAddress" defaultValue="Toshkent sh., Chilonzor tumani" className="col-span-3" />
                   </div>
-                  <Button variant="outline">Sozlamalar</Button>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="storeLogo" className="text-right">
+                      Logotip
+                    </Label>
+                    <Input id="storeLogo" type="file" className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="storeDescription" className="text-right">
+                      Tavsif
+                    </Label>
+                    <Textarea
+                      id="storeDescription"
+                      placeholder="Do'kon haqida ma'lumot"
+                      className="col-span-3"
+                    />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                <div className="flex justify-end">
+                  <Button>Saqlash</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
 
-      {/* Product Dialog */}
-      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {productAction === "add" ? "Yangi mahsulot qo'shish" : "Mahsulotni tahrirlash"}
-            </DialogTitle>
-            <DialogDescription>
-              {productAction === "add" 
-                ? "Inventaringizga yangi mahsulot qo'shing" 
-                : "Mavjud mahsulot ma'lumotlarini tahrirlang"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Mahsulot nomi
-              </Label>
-              <Input
-                id="name"
-                defaultValue={selectedProduct?.name || ""}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="price" className="text-right">
-                Narx
-              </Label>
-              <Input
-                id="price"
-                type="number"
-                defaultValue={selectedProduct?.price || ""}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stock" className="text-right">
-                Zaxira
-              </Label>
-              <Input
-                id="stock"
-                type="number"
-                defaultValue={selectedProduct?.stock || ""}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">
-                Kategoriya
-              </Label>
-              <Select defaultValue={selectedProduct?.category || ""}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Kategoriyani tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Electronics">Elektronika</SelectItem>
-                  <SelectItem value="Clothing">Kiyim-kechak</SelectItem>
-                  <SelectItem value="Home">Uy-ro'zg'or</SelectItem>
-                  <SelectItem value="Books">Kitoblar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Tavsif
-              </Label>
-              <Textarea
-                id="description"
-                defaultValue={selectedProduct?.description || ""}
-                className="col-span-3"
-                rows={4}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Rasm URL
-              </Label>
-              <Input
-                id="image"
-                defaultValue={selectedProduct?.imageUrl || ""}
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowProductDialog(false)}
-            >
-              Bekor qilish
-            </Button>
-            <Button onClick={() => productAction === "add" ? addNewProduct({}) : editProduct({})}>
-              {productAction === "add" ? "Qo'shish" : "Saqlash"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Order Details Dialog */}
+      {/* Order details dialog */}
       <Dialog open={showOrderDetailsDialog} onOpenChange={setShowOrderDetailsDialog}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Buyurtma #{selectedOrder?.id} tafsilotlari</DialogTitle>
+            <DialogTitle>Buyurtma ma'lumotlari #{selectedOrder?.id}</DialogTitle>
             <DialogDescription>
-              Buyurtma ma'lumotlari va holati
+              Buyurtma qilingan sana: {selectedOrder?.date}
             </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Mijoz ma'lumotlari</h3>
-                  <p><span className="font-medium">Ism:</span> {selectedOrder.customer}</p>
-                  <p><span className="font-medium">Telefon:</span> {selectedOrder.phone}</p>
-                  <p><span className="font-medium">Manzil:</span> {selectedOrder.address}</p>
+                  <h3 className="text-sm font-medium mb-1">Mijoz ma'lumotlari</h3>
+                  <p className="text-sm">{selectedOrder.customer}</p>
+                  <p className="text-sm">{selectedOrder.phone}</p>
+                  <p className="text-sm">{selectedOrder.address}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Buyurtma ma'lumotlari</h3>
-                  <p><span className="font-medium">Buyurtma sanasi:</span> {selectedOrder.date}</p>
-                  <p><span className="font-medium">To'lov usuli:</span> {selectedOrder.paymentMethod === "card" ? "Karta" : "Naqd pul"}</p>
-                  <p className="mt-2"><span className="font-medium">Holati:</span> <OrderStatusBadge status={selectedOrder.status} /></p>
+                  <h3 className="text-sm font-medium mb-1">Buyurtma ma'lumotlari</h3>
+                  <p className="text-sm">To'lov usuli: {selectedOrder.paymentMethod === 'card' ? 'Karta orqali' : 'Naqd pul'}</p>
+                  <p className="text-sm">Yetkazib berish vaqti: {selectedOrder.deliveryDate}, {selectedOrder.deliveryTimeSlot}</p>
+                  <p className="text-sm">Joriy holati: <OrderStatusBadge status={selectedOrder.status} /></p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Buyurtma mahsulotlari</h3>
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Mahsulot nomi</TableHead>
-                        <TableHead className="text-right">Miqdori</TableHead>
-                        <TableHead className="text-right">Narx</TableHead>
-                        <TableHead className="text-right">Jami</TableHead>
+                <h3 className="text-sm font-medium mb-2">Mahsulotlar</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Mahsulot</TableHead>
+                      <TableHead className="text-right">Miqdori</TableHead>
+                      <TableHead className="text-right">Narxi</TableHead>
+                      <TableHead className="text-right">Jami</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedOrder.products.map((product: any) => (
+                      <TableRow key={product.id}>
+                        <TableCell>{product.name}</TableCell>
+                        <TableCell className="text-right">{product.quantity}</TableCell>
+                        <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${(product.price * product.quantity).toFixed(2)}</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedOrder.products.map((product: any) => (
-                        <TableRow key={product.id}>
-                          <TableCell>{product.name}</TableCell>
-                          <TableCell className="text-right">{product.quantity}</TableCell>
-                          <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">${(product.price * product.quantity).toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-right font-medium">Jami summa</TableCell>
-                        <TableCell className="text-right font-bold">${selectedOrder.total.toFixed(2)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-right font-medium">Jami:</TableCell>
+                      <TableCell className="text-right font-bold">${selectedOrder.total.toFixed(2)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Yetkazib berish vaqti</h3>
+                <h3 className="text-sm font-medium mb-2">Yetkazib berish vaqti</h3>
                 <DeliveryTimeSelector
                   onDateChange={() => {}}
                   onTimeSlotChange={() => {}}
@@ -808,27 +668,115 @@ export default function SellerPage() {
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Holati o'zgartirish</h3>
+                <h3 className="text-sm font-medium mb-2">Buyurtma holatini yangilash</h3>
                 <div className="flex gap-2">
                   <Select defaultValue={selectedOrder.status.toLowerCase()}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Holatni tanlang" />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Holat tanlang" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Kutilayotgan</SelectItem>
+                      <SelectItem value="pending">Kutilmoqda</SelectItem>
                       <SelectItem value="processing">Jarayonda</SelectItem>
-                      <SelectItem value="shipped">Jo'natilgan</SelectItem>
-                      <SelectItem value="delivered">Yetkazilgan</SelectItem>
-                      <SelectItem value="cancelled">Bekor qilingan</SelectItem>
+                      <SelectItem value="shipped">Jo'natildi</SelectItem>
+                      <SelectItem value="delivered">Yetkazildi</SelectItem>
+                      <SelectItem value="cancelled">Bekor qilindi</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={() => updateOrderStatus(selectedOrder.id, "processing")}>
-                    Saqlash
+                  <Button onClick={() => updateOrderStatus(selectedOrder.id, "Processing")}>
+                    Yangilash
                   </Button>
                 </div>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Product add/edit dialog */}
+      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {productAction === "add" ? "Yangi mahsulot qo'shish" : "Mahsulotni tahrirlash"}
+            </DialogTitle>
+            <DialogDescription>
+              {productAction === "add" 
+                ? "Do'koningiz uchun yangi mahsulot qo'shing" 
+                : "Mavjud mahsulot ma'lumotlarini tahrirlang"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productName" className="text-right">
+                Nomi
+              </Label>
+              <Input 
+                id="productName" 
+                defaultValue={selectedProduct?.name || ""} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productDescription" className="text-right">
+                Tavsif
+              </Label>
+              <Textarea
+                id="productDescription"
+                defaultValue={selectedProduct?.description || ""}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productPrice" className="text-right">
+                Narxi
+              </Label>
+              <Input 
+                id="productPrice" 
+                type="number" 
+                defaultValue={selectedProduct?.price || ""} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productStock" className="text-right">
+                Zaxirada
+              </Label>
+              <Input 
+                id="productStock" 
+                type="number" 
+                defaultValue={selectedProduct?.stock || ""} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productCategory" className="text-right">
+                Kategoriya
+              </Label>
+              <Select defaultValue={selectedProduct?.category || "electronics"}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Kategoriyani tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="electronics">Elektronika</SelectItem>
+                  <SelectItem value="clothing">Kiyim-kechak</SelectItem>
+                  <SelectItem value="home">Uy jihozlari</SelectItem>
+                  <SelectItem value="books">Kitoblar</SelectItem>
+                  <SelectItem value="sports">Sport jihozlari</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productImage" className="text-right">
+                Rasm
+              </Label>
+              <Input id="productImage" type="file" className="col-span-3" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => productAction === "add" ? addNewProduct({}) : editProduct({})}>
+              {productAction === "add" ? "Qo'shish" : "Saqlash"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
