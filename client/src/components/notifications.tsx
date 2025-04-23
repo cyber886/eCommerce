@@ -19,7 +19,14 @@ export type Notification = {
   read: boolean;
   timestamp: Date;
   orderId?: number;
-  data?: any;
+  data?: {
+    deliveryDate?: string;
+    deliveryTime?: string;
+    customerName?: string;
+    status?: 'pending' | 'accepted' | 'rejected';
+    alternativeDate?: string;
+    alternativeTime?: string;
+  };
 };
 
 interface NotificationsProps {
@@ -63,6 +70,8 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
             data: {
               deliveryDate: "2023-06-05",
               deliveryTime: "16:00 - 18:00",
+              customerName: "Gulnora Yusupova",
+              status: 'pending'
             },
           });
         }, 200);
@@ -178,14 +187,107 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
                     {notification.message}
                   </p>
                   {notification.orderId && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="px-0 h-auto text-xs mt-1"
-                      onClick={() => handleViewOrder(notification.orderId!, notification.id)}
-                    >
-                      {t('viewOrder')}
-                    </Button>
+                    <div className="mt-1 flex gap-2 items-center">
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="px-0 h-auto text-xs"
+                        onClick={() => handleViewOrder(notification.orderId!, notification.id)}
+                      >
+                        {t('viewOrder')}
+                      </Button>
+                      
+                      {/* For delivery notifications with pending status - show accept/suggest options */}
+                      {role === 'seller' && notification.type === 'delivery' && notification.data?.status === 'pending' && (
+                        <div className="flex gap-1 ml-auto">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-xs bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
+                              >
+                                <Clock className="h-3 w-3 mr-1" /> Taklif
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Yetkazib berish vaqtini taklif qilish</DialogTitle>
+                                <DialogDescription>
+                                  Mijoz {notification.data.customerName} uchun muqobil vaqtni taklif qiling
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <div className="flex flex-col space-y-2">
+                                  <div className="bg-muted p-3 rounded-md text-sm">
+                                    <p><strong>Mijoz tanlagan vaqti:</strong></p>
+                                    <p>{notification.data.deliveryDate}, {notification.data.deliveryTime}</p>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="alternativeDate">Muqobil sana</Label>
+                                      <Select defaultValue="tomorrow">
+                                        <SelectTrigger id="alternativeDate">
+                                          <SelectValue placeholder="Sanani tanlang" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="tomorrow">Ertaga</SelectItem>
+                                          <SelectItem value="day-after">Ertadan keyin</SelectItem>
+                                          <SelectItem value="custom">Boshqa sana</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      <Label htmlFor="alternativeTime">Muqobil vaqt</Label>
+                                      <Select defaultValue="10-12">
+                                        <SelectTrigger id="alternativeTime">
+                                          <SelectValue placeholder="Vaqtni tanlang" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="10-12">10:00 - 12:00</SelectItem>
+                                          <SelectItem value="12-14">12:00 - 14:00</SelectItem>
+                                          <SelectItem value="14-16">14:00 - 16:00</SelectItem>
+                                          <SelectItem value="16-18">16:00 - 18:00</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="pt-2">
+                                    <Label htmlFor="reason">Sabab (ixtiyoriy)</Label>
+                                    <Textarea id="reason" placeholder="Nima uchun vaqtni o'zgartirish kerakligini tushuntiring" className="mt-1" />
+                                  </div>
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button type="button" variant="secondary" onClick={() => {}}>Bekor qilish</Button>
+                                <Button type="button" onClick={() => {}}>Mijozga yuborish</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-7 text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                            onClick={() => {
+                              // Signal to parent component to update the delivery status
+                              if (notification.orderId) {
+                                const orderId = notification.orderId;
+                                if (typeof window !== 'undefined') {
+                                  window.dispatchEvent(new CustomEvent('acceptDelivery', { detail: { orderId } }));
+                                  markAsRead(notification.id);
+                                }
+                              }
+                            }}
+                          >
+                            <Check className="h-3 w-3 mr-1" /> Qabul
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 {!notification.read && (
