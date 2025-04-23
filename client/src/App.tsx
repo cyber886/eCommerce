@@ -13,6 +13,7 @@ import SellerPage from "@/pages/seller-page";
 import OrderTrackingPage from "@/pages/order-tracking-page";
 import { CartProvider } from "@/hooks/use-cart";
 import { AuthProvider } from "@/hooks/use-auth";
+import { NotificationsProvider } from "@/hooks/use-notifications";
 import { ProtectedRoute } from "./lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
@@ -54,8 +55,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <Router />
-          <Toaster />
+          <NotificationsProvider>
+            <Router />
+            <Toaster />
+          </NotificationsProvider>
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>

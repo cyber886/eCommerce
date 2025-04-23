@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import DeliveryTimeSelector from "@/components/delivery-time-selector";
+import Notifications, { Notification } from "@/components/notifications";
 
 export default function SellerPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -239,19 +240,30 @@ export default function SellerPage() {
             <p className="text-sm text-muted-foreground mt-1 capitalize">Sotuvchi hisobi</p>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout} 
-          className="flex items-center" 
-          disabled={logoutMutation.isPending}
-        >
-          {logoutMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <LogOut className="mr-2 h-4 w-4" />
-          )}
-          Chiqish
-        </Button>
+        <div className="flex items-center gap-3">
+          <Notifications 
+            role="seller"
+            onViewOrder={(orderId) => {
+              const order = recentOrders.find(o => o.id === orderId);
+              if (order) {
+                openOrderDetailsDialog(order);
+              }
+            }}
+          />
+          <Button 
+            variant="outline" 
+            onClick={handleLogout} 
+            className="flex items-center" 
+            disabled={logoutMutation.isPending}
+          >
+            {logoutMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="mr-2 h-4 w-4" />
+            )}
+            Chiqish
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
