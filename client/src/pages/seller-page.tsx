@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import DeliveryTimeSelector from "@/components/delivery-time-selector";
 
 export default function SellerPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -746,6 +747,21 @@ export default function SellerPage() {
                     </TableBody>
                   </Table>
                 </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Yetkazib berish vaqti</h3>
+                <DeliveryTimeSelector
+                  onDateChange={() => {}}
+                  onTimeSlotChange={() => {}}
+                  onDeliveryTypeChange={() => {}}
+                  selectedDate={selectedOrder.deliveryDate}
+                  selectedTimeSlot={selectedOrder.deliveryTimeSlot}
+                  selectedDeliveryType="standard"
+                  isSeller={true}
+                  onAcceptDelivery={() => handleAcceptDelivery(selectedOrder.id)}
+                  deliveryStatus={deliveryStatus[selectedOrder.id]}
+                />
               </div>
 
               <div>
