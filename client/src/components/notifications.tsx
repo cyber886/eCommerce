@@ -196,7 +196,7 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
                     onClick={() => markAsRead(notification.id)}
                   >
                     <X className="h-3 w-3" />
-                    <span className="sr-only">Mark as read</span>
+                    <span className="sr-only">{t('markAsRead')}</span>
                   </Button>
                 )}
               </div>

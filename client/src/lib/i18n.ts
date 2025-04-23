@@ -115,6 +115,9 @@ const resources = {
       "quantity": "Quantity",
       "wishlist": "Wishlist",
       "viewOrder": "View Order",
+      "markAllAsRead": "Mark all as read",
+      "noNotifications": "No notifications",
+      "markAsRead": "Mark as read",
     }
   },
   ru: {
@@ -225,6 +228,9 @@ const resources = {
       "quantity": "Количество",
       "wishlist": "Избранное",
       "viewOrder": "Посмотреть заказ",
+      "markAllAsRead": "Отметить все как прочитанные",
+      "noNotifications": "Нет уведомлений",
+      "markAsRead": "Отметить как прочитанное",
     }
   },
   uz: {
@@ -335,6 +341,9 @@ const resources = {
       "quantity": "Miqdori",
       "wishlist": "Sevimlilar",
       "viewOrder": "Buyurtmani ko'rish",
+      "markAllAsRead": "Barchasini o'qilgan deb belgilash",
+      "noNotifications": "Bildirishnomalar yo'q",
+      "markAsRead": "O'qilgan deb belgilash",
     }
   }
 };
