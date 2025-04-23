@@ -144,6 +144,23 @@ export default function CheckoutPage() {
       const response = await apiRequest("POST", "/api/orders", orderData);
       const order = await response.json();
       
+      // Create delivery time notification for sellers
+      try {
+        // Store delivery time selection in localStorage to be picked up by seller
+        const deliveryNotificationKey = `delivery_time_selected_${order.id || Date.now()}`;
+        localStorage.setItem(deliveryNotificationKey, JSON.stringify({
+          customerId: user?.id || 'guest',
+          customerName: data.customerName,
+          deliveryDate: data.deliveryDate,
+          deliveryTime: data.deliveryTimeSlot,
+          orderId: order.id || 1001,
+          timestamp: new Date().toISOString()
+        }));
+        console.log("Delivery time notification created for seller");
+      } catch (err) {
+        console.error("Failed to create delivery notification", err);
+      }
+      
       // Show confirmation and clear cart
       setOrderId(order.id);
       setIsOrderComplete(true);
