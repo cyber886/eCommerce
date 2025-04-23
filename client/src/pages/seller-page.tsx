@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import DeliveryTimeSelector from "@/components/delivery-time-selector";
+import DeliveryTimeAnalyzer from "@/components/delivery-time-analyzer";
 import SellerNavbar from "@/components/seller-navbar";
 import Notifications from "@/components/notifications";
 
@@ -236,6 +237,16 @@ export default function SellerPage() {
       [orderId]: 'accepted'
     }));
     console.log("Accepted delivery time for order:", orderId);
+  };
+  
+  const handleSuggestAlternative = (orderId: number, alternativeDate: string, alternativeTime: string, reason: string) => {
+    // In a real implementation, this would send an API request to suggest an alternative time and notify customer
+    console.log("Suggesting alternative delivery time for order:", orderId, alternativeDate, alternativeTime, reason);
+    // For demo, we'll update the delivery status to pending but in a real app this would be a different status
+    setDeliveryStatus(prev => ({
+      ...prev,
+      [orderId]: 'pending'
+    }));
   };
 
   // Status badge component
@@ -654,16 +665,14 @@ export default function SellerPage() {
 
               <div>
                 <h3 className="text-sm font-medium mb-2">Yetkazib berish vaqti</h3>
-                <DeliveryTimeSelector
-                  onDateChange={() => {}}
-                  onTimeSlotChange={() => {}}
-                  onDeliveryTypeChange={() => {}}
-                  selectedDate={selectedOrder.deliveryDate}
-                  selectedTimeSlot={selectedOrder.deliveryTimeSlot}
-                  selectedDeliveryType="standard"
-                  isSeller={true}
-                  onAcceptDelivery={() => handleAcceptDelivery(selectedOrder.id)}
-                  deliveryStatus={deliveryStatus[selectedOrder.id]}
+                <DeliveryTimeAnalyzer
+                  orderId={selectedOrder.id}
+                  customerName={selectedOrder.customer}
+                  deliveryDate={selectedOrder.deliveryDate}
+                  deliveryTime={selectedOrder.deliveryTimeSlot}
+                  status={deliveryStatus[selectedOrder.id] || 'pending'}
+                  onAccept={handleAcceptDelivery}
+                  onSuggestAlternative={handleSuggestAlternative}
                 />
               </div>
 
