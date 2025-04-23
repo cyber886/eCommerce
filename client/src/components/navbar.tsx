@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -31,12 +32,14 @@ import {
   Store 
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import LanguageSwitcher from "./language-switcher";
 
 export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { cartCount, setIsCartOpen } = useCart();
   const { user, logoutMutation } = useAuth();
   const [, navigate] = useLocation();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b">
@@ -50,34 +53,37 @@ export default function Navbar() {
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px]">
             <SheetHeader className="mb-6">
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle>{t('categories')}</SheetTitle>
             </SheetHeader>
             <div className="space-y-4">
               <SheetClose asChild>
                 <Link to="/" className="block py-2 px-4 hover:bg-gray-100 rounded">
-                  Home
+                  {t('home')}
                 </Link>
               </SheetClose>
               <SheetClose asChild>
                 <Link to="/category/electronics" className="block py-2 px-4 hover:bg-gray-100 rounded">
-                  Electronics
+                  {t('categories')}
                 </Link>
               </SheetClose>
               <SheetClose asChild>
                 <Link to="/category/fashion" className="block py-2 px-4 hover:bg-gray-100 rounded">
-                  Fashion
+                  {t('fashion')}
                 </Link>
               </SheetClose>
               <SheetClose asChild>
                 <Link to="/category/home" className="block py-2 px-4 hover:bg-gray-100 rounded">
-                  Home & Garden
+                  {t('home')}
                 </Link>
               </SheetClose>
               <SheetClose asChild>
-                <Link to="/category/books" className="block py-2 px-4 hover:bg-gray-100 rounded">
-                  Books
+                <Link to="/tracking" className="block py-2 px-4 hover:bg-gray-100 rounded">
+                  {t('realTimeTracking')}
                 </Link>
               </SheetClose>
+              <div className="pt-4">
+                <LanguageSwitcher />
+              </div>
             </div>
           </SheetContent>
         </Sheet>
@@ -90,27 +96,27 @@ export default function Navbar() {
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           <Link to="/" className="font-medium hover:text-primary transition-colors">
-            Bosh sahifa
+            {t('home')}
           </Link>
           <Link to="/category/electronics" className="font-medium hover:text-primary transition-colors">
-            Elektronika
+            {t('electronics')}
           </Link>
           <Link to="/category/fashion" className="font-medium hover:text-primary transition-colors">
-            Kiyim-kechak
+            {t('fashion')}
           </Link>
           <Link to="/category/home" className="font-medium hover:text-primary transition-colors">
-            Uy jihozlari
-          </Link>
-          <Link to="/category/books" className="font-medium hover:text-primary transition-colors">
-            Kitoblar
+            {t('home')}
           </Link>
           <Link to="/tracking" className="font-medium hover:text-primary transition-colors">
-            Kuzatuv
+            {t('tracking')}
           </Link>
         </nav>
 
         {/* Right side buttons */}
         <div className="flex items-center space-x-2">
+          {/* Language switcher */}
+          <LanguageSwitcher />
+          
           {/* Search button */}
           <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
             <SheetTrigger asChild>
@@ -120,11 +126,11 @@ export default function Navbar() {
             </SheetTrigger>
             <SheetContent side="top" className="h-[150px]">
               <SheetHeader className="mb-4">
-                <SheetTitle>Qidirish</SheetTitle>
+                <SheetTitle>{t('search')}</SheetTitle>
               </SheetHeader>
               <div className="flex items-center space-x-2">
                 <Input 
-                  placeholder="Mahsulotlarni qidiring..." 
+                  placeholder={t('search')} 
                   className="flex-1" 
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -133,7 +139,7 @@ export default function Navbar() {
                     }
                   }}
                 />
-                <Button>Qidirish</Button>
+                <Button>{t('search')}</Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -163,21 +169,21 @@ export default function Navbar() {
                   {user.role === "seller" ? (
                     <DropdownMenuItem onClick={() => navigate("/seller-page")}>
                       <Store className="h-4 w-4 mr-2" />
-                      <span>Sotuvchi paneli</span>
+                      <span>{t('dashboard')}</span>
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={() => navigate("/account")}>
                       <UserCircle className="h-4 w-4 mr-2" />
-                      <span>Mening hisobim</span>
+                      <span>{t('account')}</span>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => navigate("/account")}>
                     <Heart className="h-4 w-4 mr-2" />
-                    <span>Istaklar ro'yxati</span>
+                    <span>{t('wishlist')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/account?tab=settings")}>
                     <Settings className="h-4 w-4 mr-2" />
-                    <span>Sozlamalar</span>
+                    <span>{t('settings')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -185,14 +191,14 @@ export default function Navbar() {
                     disabled={logoutMutation.isPending}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    <span>Chiqish</span>
+                    <span>{t('logout')}</span>
                   </DropdownMenuItem>
                 </>
               ) : (
                 <>
                   <DropdownMenuItem onClick={() => navigate("/auth")}>
                     <User className="h-4 w-4 mr-2" />
-                    <span>Kirish / Ro'yxatdan o'tish</span>
+                    <span>{t('login')} / {t('register')}</span>
                   </DropdownMenuItem>
                 </>
               )}

@@ -16,6 +16,9 @@ const resources = {
       "logout": "Log Out",
       "login": "Login",
       "register": "Register",
+      "electronics": "Electronics",
+      "fashion": "Fashion",
+      "tracking": "Tracking",
       
       // Auth page
       "signInAccount": "Sign in to your account",
