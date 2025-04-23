@@ -5,11 +5,50 @@ import { randomUUID } from "crypto";
 import { insertOrderSchema, insertCartItemSchema, insertWishlistItemSchema, insertReviewSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
+  
+  // Create admin account for testing without registration
+  // This creates or updates the test accounts "customer" and "seller" with hashed passwords
+  const createTestUsers = async () => {
+    try {
+      // Create customer account
+      const existingCustomer = await storage.getUserByUsername("customer");
+      if (!existingCustomer) {
+        const hashedCustomerPassword = await hashPassword("customer123");
+        await storage.createUser({
+          username: "customer",
+          password: hashedCustomerPassword,
+          email: "customer@example.com",
+          fullName: "Demo Customer",
+          role: "customer"
+        });
+        console.log("Created test customer account");
+      }
+      
+      // Create seller account
+      const existingSeller = await storage.getUserByUsername("seller");
+      if (!existingSeller) {
+        const hashedSellerPassword = await hashPassword("seller123");
+        await storage.createUser({
+          username: "seller",
+          password: hashedSellerPassword,
+          email: "seller@example.com",
+          fullName: "Demo Seller",
+          role: "seller"
+        });
+        console.log("Created test seller account");
+      }
+    } catch (error) {
+      console.error("Error creating test users:", error);
+    }
+  };
+  
+  // Create test users
+  await createTestUsers();
   
   // Create session ID if not exists for non-authenticated sessions
   app.use((req, res, next) => {

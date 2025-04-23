@@ -124,26 +124,7 @@ export class MemStorage implements IStorage {
   }
   
   private initializeUsers(): void {
-    const users: InsertUser[] = [
-      {
-        username: "customer",
-        password: "customer123", // This will be hashed when actually registering
-        email: "customer@example.com",
-        fullName: "Demo Customer",
-        role: "customer"
-      },
-      {
-        username: "seller",
-        password: "seller123", // This will be hashed when actually registering
-        email: "seller@example.com",
-        fullName: "Demo Seller",
-        role: "seller"
-      }
-    ];
-    
-    users.forEach(user => {
-      this.createUser(user);
-    });
+    // Users will be created with hashed passwords in server/routes.ts
   }
   
   // User methods
