@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BarChart3, Package, Users, Settings, LogOut, AlertCircle, Loader2 } from "lucide-react";
 import Notifications from "./notifications";
+import LanguageSwitcher from "./language-switcher";
 
 export default function SellerNavbar() {
   const { user, logoutMutation } = useAuth();
   const [, navigate] = useLocation();
   const [expanded, setExpanded] = useState(true);
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -32,7 +35,7 @@ export default function SellerNavbar() {
           {expanded && (
             <div className="flex flex-col">
               <span className="font-medium text-sm">{user.fullName || user.username}</span>
-              <span className="text-xs text-muted-foreground">Sotuvchi</span>
+              <span className="text-xs text-muted-foreground">{t('seller')}</span>
             </div>
           )}
         </div>
@@ -89,34 +92,41 @@ export default function SellerNavbar() {
           <NavItem 
             href="/seller-page" 
             icon={<BarChart3 className="h-5 w-5" />} 
-            label="Boshqaruv paneli" 
+            label={t('dashboard')} 
             expanded={expanded}
           />
           <NavItem 
             href="/seller-page?tab=orders" 
             icon={<Package className="h-5 w-5" />} 
-            label="Buyurtmalar" 
+            label={t('orders')} 
             expanded={expanded}
           />
           <NavItem 
             href="/seller-page?tab=products" 
             icon={<Users className="h-5 w-5" />} 
-            label="Mahsulotlar" 
+            label={t('products')} 
             expanded={expanded}
           />
           <NavItem 
             href="/seller-page?tab=settings" 
             icon={<Settings className="h-5 w-5" />} 
-            label="Sozlamalar" 
+            label={t('settings')} 
             expanded={expanded}
           />
         </nav>
+        
+        {/* Language switcher */}
+        {expanded && (
+          <div className="mt-4 px-3">
+            <LanguageSwitcher />
+          </div>
+        )}
       </div>
 
       <div className="p-4 border-t">
         <div className="flex items-center justify-between mb-4">
           {expanded ? (
-            <span className="text-xs text-muted-foreground">Bildirishnomalar</span>
+            <span className="text-xs text-muted-foreground">{t('notifications')}</span>
           ) : (
             <span></span>
           )}
@@ -141,7 +151,7 @@ export default function SellerNavbar() {
           ) : (
             <LogOut className="h-4 w-4" />
           )}
-          {expanded && <span>Chiqish</span>}
+          {expanded && <span>{t('logout')}</span>}
         </Button>
       </div>
     </div>
