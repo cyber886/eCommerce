@@ -24,7 +24,7 @@ import { formatCurrency } from '@/lib/utils';
 
 export default function OrderTrackingPage() {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [trackingId, setTrackingId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +38,21 @@ export default function OrderTrackingPage() {
     time: string;
     reason: string;
   } | null>(null);
+
+  // Get orderId from URL if it exists
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const orderIdFromUrl = searchParams.get('orderId');
+    
+    if (orderIdFromUrl) {
+      setTrackingId(orderIdFromUrl);
+      // Use setTimeout to avoid React state update warning
+      setTimeout(() => {
+        handleTrack(orderIdFromUrl);
+      }, 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location]);
   
   // Check localStorage for any delivery notifications related to this order
   useEffect(() => {
@@ -169,8 +184,11 @@ export default function OrderTrackingPage() {
     orderDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   };
 
-  const handleTrack = () => {
-    if (!trackingId.trim()) {
+  // Function to track order - can be called programmatically or from button
+  const handleTrack = (orderIdParam?: string): void => {
+    const idToTrack = orderIdParam || trackingId;
+    
+    if (!idToTrack.trim()) {
       setError('Iltimos, buyurtma raqamini kiriting');
       return;
     }
@@ -178,10 +196,12 @@ export default function OrderTrackingPage() {
     setIsLoading(true);
     setError(null);
     
-    // In a real app, this would be an API call
+    // In a real app, this would be an API call to fetch the specific order
     setTimeout(() => {
       setIsLoading(false);
-      setOrderData(mockOrderData);
+      // Set the mock order ID to match the requested order ID
+      const updatedMockData = { ...mockOrderData, id: idToTrack };
+      setOrderData(updatedMockData);
     }, 1000);
   };
 
@@ -230,7 +250,7 @@ export default function OrderTrackingPage() {
                     onChange={(e) => setTrackingId(e.target.value)}
                     className="flex-1"
                   />
-                  <Button onClick={handleTrack} disabled={isLoading}>
+                  <Button onClick={() => handleTrack()} disabled={isLoading}>
                     {isLoading ? 'Qidirilmoqda...' : 'Kuzatish'}
                   </Button>
                 </div>

@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LanguageSwitcher from "./language-switcher";
+import Notifications from "./notifications";
 
 export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
