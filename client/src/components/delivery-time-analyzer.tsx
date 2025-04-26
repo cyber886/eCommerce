@@ -5,8 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Check, Clock, AlertCircle, ShieldCheck } from "lucide-react";
+import { Check, Clock, AlertCircle, ShieldCheck, CalendarIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { format, addDays } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface DeliveryTimeAnalyzerProps {
   orderId: number;
@@ -28,48 +32,37 @@ export default function DeliveryTimeAnalyzer({
   onSuggestAlternative
 }: DeliveryTimeAnalyzerProps) {
   const { t } = useTranslation();
-  const [alternativeDate, setAlternativeDate] = useState<string>("tomorrow");
+  const [date, setDate] = useState<Date | undefined>(addDays(new Date(), 1)); // Default to tomorrow
   const [alternativeTime, setAlternativeTime] = useState<string>("10-12");
   const [reason, setReason] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
-  // Map the alternative date values to actual formatted dates
-  const getFormattedDate = (dateKey: string): string => {
-    const today = new Date();
-    switch (dateKey) {
-      case "tomorrow":
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        return tomorrow.toLocaleDateString();
-      case "day-after":
-        const dayAfter = new Date(today);
-        dayAfter.setDate(dayAfter.getDate() + 2);
-        return dayAfter.toLocaleDateString();
-      default:
-        return dateKey;
-    }
+  // Available time slots with 2-hour intervals
+  const timeSlots = [
+    { value: "8-10", label: "8:00 - 10:00" },
+    { value: "10-12", label: "10:00 - 12:00" },
+    { value: "12-14", label: "12:00 - 14:00" },
+    { value: "14-16", label: "14:00 - 16:00" },
+    { value: "16-18", label: "16:00 - 18:00" },
+    { value: "18-20", label: "18:00 - 20:00" }
+  ];
+
+  // Get formatted date string from Date object
+  const getFormattedDate = (date?: Date): string => {
+    if (!date) return "";
+    return format(date, "yyyy-MM-dd");
   };
 
   // Map the time slot values to actual time ranges
   const getFormattedTime = (timeKey: string): string => {
-    switch (timeKey) {
-      case "10-12":
-        return "10:00 - 12:00";
-      case "12-14":
-        return "12:00 - 14:00";
-      case "14-16":
-        return "14:00 - 16:00";
-      case "16-18":
-        return "16:00 - 18:00";
-      default:
-        return timeKey;
-    }
+    const slot = timeSlots.find(slot => slot.value === timeKey);
+    return slot ? slot.label : timeKey;
   };
 
   const handleSubmitAlternative = () => {
     onSuggestAlternative(
       orderId,
-      getFormattedDate(alternativeDate),
+      getFormattedDate(date),
       getFormattedTime(alternativeTime),
       reason
     );
@@ -135,19 +128,30 @@ export default function DeliveryTimeAnalyzer({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="alternativeDate">Muqobil sana</Label>
-                    <Select 
-                      defaultValue="tomorrow"
-                      onValueChange={(value) => setAlternativeDate(value)}
-                    >
-                      <SelectTrigger id="alternativeDate">
-                        <SelectValue placeholder="Sanani tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="tomorrow">Ertaga</SelectItem>
-                        <SelectItem value="day-after">Ertadan keyin</SelectItem>
-                        <SelectItem value="custom">Boshqa sana</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="alternativeDate"
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {date ? format(date, "PPP") : "Sana tanlang"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          initialFocus
+                          disabled={(currentDate) => currentDate < new Date()}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   
                   <div className="space-y-2">
@@ -160,10 +164,11 @@ export default function DeliveryTimeAnalyzer({
                         <SelectValue placeholder="Vaqtni tanlang" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="10-12">10:00 - 12:00</SelectItem>
-                        <SelectItem value="12-14">12:00 - 14:00</SelectItem>
-                        <SelectItem value="14-16">14:00 - 16:00</SelectItem>
-                        <SelectItem value="16-18">16:00 - 18:00</SelectItem>
+                        {timeSlots.map((slot) => (
+                          <SelectItem key={slot.value} value={slot.value}>
+                            {slot.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
