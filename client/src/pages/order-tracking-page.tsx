@@ -384,6 +384,23 @@ export default function OrderTrackingPage() {
                     </p>
                   </div>
                   
+                  {/* Delivery time selection status from seller */}
+                  {(deliveryStatus === 'alternative' || deliveryStatus === 'accepted' || deliveryStatus === 'rejected') && (
+                    <div className="pt-3 border-t">
+                      <BuyerDeliveryNotification
+                        orderId={parseInt(orderData.id)}
+                        deliveryDate={alternativeDeliveryInfo?.date || ""}
+                        deliveryTime={alternativeDeliveryInfo?.time || ""}
+                        status={deliveryStatus}
+                        alternativeDate={alternativeDeliveryInfo?.date}
+                        alternativeTime={alternativeDeliveryInfo?.time}
+                        reason={alternativeDeliveryInfo?.reason}
+                        onAcceptAlternative={handleAcceptAlternative}
+                        onRejectAlternative={handleRejectAlternative}
+                      />
+                    </div>
+                  )}
+                  
                   <Button 
                     onClick={handleRefresh} 
                     disabled={isLoading || orderData.status === 'delivered'} 
