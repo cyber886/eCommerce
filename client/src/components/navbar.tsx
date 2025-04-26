@@ -117,6 +117,16 @@ export default function Navbar() {
           {/* Language switcher */}
           <LanguageSwitcher />
           
+          {/* Notifications for buyers */}
+          {user && user.role === "buyer" && (
+            <Notifications 
+              role="buyer" 
+              onViewOrder={(orderId) => {
+                navigate(`/tracking?orderId=${orderId}`);
+              }}
+            />
+          )}
+          
           {/* Search button */}
           <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
             <SheetTrigger asChild>
