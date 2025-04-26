@@ -31,6 +31,12 @@ export default function SellerPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showOrderDetailsDialog, setShowOrderDetailsDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState<Record<number, 'pending' | 'accepted' | 'rejected'>>({
+    1001: 'pending',
+    1002: 'pending',
+    1003: 'pending',
+    1004: 'pending',
+  });
   
   // Check localStorage for product selections and send notifications
   useEffect(() => {
@@ -256,14 +262,6 @@ export default function SellerPage() {
     setSelectedOrder(order);
     setShowOrderDetailsDialog(true);
   };
-  
-  // Add state for delivery status tracking
-  const [deliveryStatus, setDeliveryStatus] = useState<Record<number, 'pending' | 'accepted' | 'rejected'>>({
-    1001: 'pending',
-    1002: 'pending',
-    1003: 'pending',
-    1004: 'pending',
-  });
   
   const handleAcceptDelivery = (orderId: number) => {
     // In a real implementation, this would send an API request
@@ -564,44 +562,35 @@ export default function SellerPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Mahsulot nomi</TableHead>
-                      <TableHead>Zaxira</TableHead>
-                      <TableHead>Narx</TableHead>
+                      <TableHead>Nomi</TableHead>
                       <TableHead>Kategoriya</TableHead>
+                      <TableHead>Narx</TableHead>
+                      <TableHead>Mavjud</TableHead>
                       <TableHead className="text-right">Amallar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {products.map((product) => (
                       <TableRow key={product.id}>
-                        <TableCell>#{product.id}</TableCell>
                         <TableCell>{product.name}</TableCell>
-                        <TableCell>
-                          <span className={product.stock < 10 ? "text-red-600" : "text-green-600"}>
-                            {product.stock}
-                          </span>
-                        </TableCell>
-                        <TableCell>${product.price.toFixed(2)}</TableCell>
                         <TableCell>{product.category}</TableCell>
+                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                        <TableCell>{product.stock}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button 
                               variant="ghost" 
-                              size="sm" 
+                              size="sm"
                               onClick={() => openProductDialog("edit", product)}
                             >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Tahrirlash
+                              <Edit className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              className="text-red-500 hover:text-red-700"
                               onClick={() => deleteProduct(product.id)}
                             >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              O'chirish
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -612,15 +601,15 @@ export default function SellerPage() {
               </CardContent>
             </Card>
           </TabsContent>
-
+          
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Do'kon sozlamalari</CardTitle>
-                <CardDescription>Do'kon uchun asosiy sozlamalarni boshqaring</CardDescription>
+                <CardTitle>Do'kon ma'lumotlari</CardTitle>
+                <CardDescription>Do'kon ma'lumotlarini tahrirlang</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid gap-4">
+                <div className="space-y-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="storeName" className="text-right">
                       Do'kon nomi
@@ -776,13 +765,13 @@ export default function SellerPage() {
                 : "Mavjud mahsulot ma'lumotlarini tahrirlang"}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productName" className="text-right">
                 Nomi
               </Label>
               <Input 
-                id="productName" 
+                id="productName"
                 defaultValue={selectedProduct?.name || ""} 
                 className="col-span-3" 
               />
@@ -798,53 +787,74 @@ export default function SellerPage() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productCategory" className="text-right">
+                Kategoriya
+              </Label>
+              <Select defaultValue={selectedProduct?.category || "Electronics"}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Kategoriyani tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Electronics">Elektronika</SelectItem>
+                  <SelectItem value="Clothing">Kiyim</SelectItem>
+                  <SelectItem value="Home">Uy jihozlari</SelectItem>
+                  <SelectItem value="Beauty">Go'zallik</SelectItem>
+                  <SelectItem value="Sports">Sport</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productPrice" className="text-right">
-                Narxi
+                Narx
               </Label>
               <Input 
                 id="productPrice" 
-                type="number" 
-                defaultValue={selectedProduct?.price || ""} 
+                type="number"
+                defaultValue={selectedProduct?.price || ""}
                 className="col-span-3" 
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productStock" className="text-right">
-                Zaxirada
+                Mavjud miqdori
               </Label>
               <Input 
                 id="productStock" 
-                type="number" 
-                defaultValue={selectedProduct?.stock || ""} 
+                type="number"
+                defaultValue={selectedProduct?.stock || ""}
                 className="col-span-3" 
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="productCategory" className="text-right">
-                Kategoriya
-              </Label>
-              <Select defaultValue={selectedProduct?.category || "electronics"}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Kategoriyani tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="electronics">Elektronika</SelectItem>
-                  <SelectItem value="clothing">Kiyim-kechak</SelectItem>
-                  <SelectItem value="home">Uy jihozlari</SelectItem>
-                  <SelectItem value="books">Kitoblar</SelectItem>
-                  <SelectItem value="sports">Sport jihozlari</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productImage" className="text-right">
                 Rasm
               </Label>
-              <Input id="productImage" type="file" className="col-span-3" />
+              <Input 
+                id="productImage" 
+                type="file"
+                className="col-span-3" 
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => productAction === "add" ? addNewProduct({}) : editProduct({})}>
+            <Button 
+              onClick={() => 
+                productAction === "add" 
+                  ? addNewProduct({
+                      name: (document.getElementById("productName") as HTMLInputElement)?.value,
+                      description: (document.getElementById("productDescription") as HTMLTextAreaElement)?.value,
+                      price: parseFloat((document.getElementById("productPrice") as HTMLInputElement)?.value || "0"),
+                      stock: parseInt((document.getElementById("productStock") as HTMLInputElement)?.value || "0"),
+                    })
+                  : editProduct({
+                      id: selectedProduct?.id,
+                      name: (document.getElementById("productName") as HTMLInputElement)?.value,
+                      description: (document.getElementById("productDescription") as HTMLTextAreaElement)?.value,
+                      price: parseFloat((document.getElementById("productPrice") as HTMLInputElement)?.value || "0"),
+                      stock: parseInt((document.getElementById("productStock") as HTMLInputElement)?.value || "0"),
+                    })
+              }
+            >
               {productAction === "add" ? "Qo'shish" : "Saqlash"}
             </Button>
           </DialogFooter>
