@@ -39,10 +39,12 @@ export function formatDeliveryDate(date: Date): { dayName: string; dayNumber: nu
   return { dayName, dayNumber, month, fullDate };
 }
 
-// Delivery time slots
+// Delivery time slots with 2-hour intervals
 export const timeSlots = [
-  { id: 1, time: "9:00 - 12:00" },
-  { id: 2, time: "12:00 - 15:00" },
-  { id: 3, time: "15:00 - 18:00" },
-  { id: 4, time: "18:00 - 21:00" },
+  { id: 1, time: "8:00 - 10:00" },
+  { id: 2, time: "10:00 - 12:00" },
+  { id: 3, time: "12:00 - 14:00" },
+  { id: 4, time: "14:00 - 16:00" },
+  { id: 5, time: "16:00 - 18:00" },
+  { id: 6, time: "18:00 - 20:00" },
 ];

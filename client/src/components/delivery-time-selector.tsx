@@ -48,8 +48,8 @@ export default function DeliveryTimeSelector({
 
   // Check if a specific time slot should be disabled
   const isTimeSlotDisabled = (slotId: number): boolean => {
-    // Disable the last slot (9pm-12am) for demonstration purposes
-    return slotId === 5;
+    // Disable the last slot for demonstration purposes
+    return slotId > 6;
   };
 
   return (

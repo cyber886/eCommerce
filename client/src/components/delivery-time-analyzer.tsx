@@ -118,77 +118,69 @@ export default function DeliveryTimeAnalyzer({
                 Mijoz {customerName} uchun muqobil vaqtni taklif qiling
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="flex flex-col space-y-2">
+            <div className="py-4">
+              <div className="flex flex-col space-y-4">
                 <div className="bg-muted p-3 rounded-md text-sm">
                   <p><strong>Mijoz tanlagan vaqti:</strong></p>
                   <p>{deliveryDate}, {deliveryTime}</p>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="alternativeDate">Muqobil sana</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          id="alternativeDate"
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {date ? format(date, "PPP") : "Sana tanlang"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={date}
-                          onSelect={setDate}
-                          initialFocus
-                          disabled={(currentDate) => currentDate < new Date()}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="alternativeTime">Muqobil vaqt</Label>
-                    <Select 
-                      defaultValue="10-12"
-                      onValueChange={(value) => setAlternativeTime(value)}
-                    >
-                      <SelectTrigger id="alternativeTime">
-                        <SelectValue placeholder="Vaqtni tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeSlots.map((slot) => (
-                          <SelectItem key={slot.value} value={slot.value}>
-                            {slot.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <Label htmlFor="alternativeDate" className="text-sm font-medium mb-1.5 block">Muqobil sana</Label>
+                  <Select 
+                    defaultValue="tomorrow"
+                    onValueChange={(value) => {
+                      if (value === "tomorrow") {
+                        setDate(addDays(new Date(), 1));
+                      } else if (value === "dayAfter") {
+                        setDate(addDays(new Date(), 2));
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="alternativeDate" className="w-full">
+                      <SelectValue placeholder="Sanani tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tomorrow">Ertaga</SelectItem>
+                      <SelectItem value="dayAfter">Ertadan keyin</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                <div className="pt-2">
-                  <Label htmlFor="reason">Sabab (ixtiyoriy)</Label>
+                <div>
+                  <Label htmlFor="alternativeTime" className="text-sm font-medium mb-1.5 block">Muqobil vaqt</Label>
+                  <Select 
+                    defaultValue="10-12"
+                    onValueChange={(value) => setAlternativeTime(value)}
+                  >
+                    <SelectTrigger id="alternativeTime" className="w-full">
+                      <SelectValue placeholder="Vaqtni tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map((slot) => (
+                        <SelectItem key={slot.value} value={slot.value}>
+                          {slot.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="reason" className="text-sm font-medium mb-1.5 block">Sabab (ixtiyoriy)</Label>
                   <Textarea 
                     id="reason" 
                     placeholder="Nima uchun vaqtni o'zgartirish kerakligini tushuntiring" 
-                    className="mt-1"
+                    rows={4}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)} 
                   />
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => setDialogOpen(false)}>Bekor qilish</Button>
-              <Button type="button" onClick={handleSubmitAlternative}>Mijozga yuborish</Button>
+            <DialogFooter className="flex justify-between">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Bekor qilish</Button>
+              <Button type="button" className="bg-blue-500 hover:bg-blue-600" onClick={handleSubmitAlternative}>Mijozga yuborish</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
