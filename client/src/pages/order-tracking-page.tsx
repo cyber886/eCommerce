@@ -17,7 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, MapPin, Info, Truck, Package, Phone, CheckCircle } from 'lucide-react';
 import DeliveryTimeline, { DeliveryEvent } from '@/components/delivery-timeline';
+import BuyerDeliveryNotification from '@/components/buyer-delivery-notification';
 import { useAuth } from '@/hooks/use-auth';
+import { useNotifications } from '@/hooks/use-notifications';
 import { formatCurrency } from '@/lib/utils';
 
 export default function OrderTrackingPage() {
@@ -30,6 +32,94 @@ export default function OrderTrackingPage() {
   
   // This would typically come from an API call
   const [orderData, setOrderData] = useState<any>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState<'pending' | 'accepted' | 'rejected' | 'alternative'>('pending');
+  const [alternativeDeliveryInfo, setAlternativeDeliveryInfo] = useState<{
+    date: string;
+    time: string;
+    reason: string;
+  } | null>(null);
+  
+  // Check localStorage for any delivery notifications related to this order
+  useEffect(() => {
+    if (orderData) {
+      // Check if there are any delivery status updates in localStorage
+      const deliveryResponseKey = `delivery_response_${orderData.id}`;
+      const deliveryResponse = localStorage.getItem(deliveryResponseKey);
+      
+      if (deliveryResponse) {
+        try {
+          const responseData = JSON.parse(deliveryResponse);
+          setDeliveryStatus(responseData.status);
+          
+          if (responseData.status === 'alternative') {
+            setAlternativeDeliveryInfo({
+              date: responseData.alternativeDate,
+              time: responseData.alternativeTime,
+              reason: responseData.reason || ''
+            });
+          }
+        } catch (err) {
+          console.error('Failed to parse delivery response', err);
+        }
+      }
+    }
+  }, [orderData]);
+  
+  const { addNotification } = useNotifications();
+  
+  // Handle accepting alternative delivery time
+  const handleAcceptAlternative = (orderId: number) => {
+    // Save the accepted alternative to localStorage
+    const responseKey = `delivery_response_${orderId}`;
+    const acceptedData = {
+      status: 'accepted',
+      orderId,
+      date: alternativeDeliveryInfo?.date,
+      time: alternativeDeliveryInfo?.time,
+      timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem(responseKey, JSON.stringify(acceptedData));
+    setDeliveryStatus('accepted');
+    
+    // Send notification to seller
+    addNotification({
+      title: 'Alternate delivery time accepted',
+      message: `Customer has accepted your alternative delivery time proposal for order #${orderId}`,
+      type: 'delivery',
+      orderId,
+      data: {
+        deliveryDate: alternativeDeliveryInfo?.date,
+        deliveryTime: alternativeDeliveryInfo?.time,
+        status: 'accepted'
+      }
+    });
+  };
+  
+  // Handle rejecting alternative delivery time
+  const handleRejectAlternative = (orderId: number) => {
+    // Save the rejection to localStorage
+    const responseKey = `delivery_response_${orderId}`;
+    const rejectedData = {
+      status: 'rejected',
+      orderId,
+      timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem(responseKey, JSON.stringify(rejectedData));
+    setDeliveryStatus('rejected');
+    
+    // Send notification to seller
+    addNotification({
+      title: 'Alternate delivery time rejected',
+      message: `Customer has rejected your alternative delivery time proposal for order #${orderId}`,
+      type: 'delivery',
+      orderId,
+      data: {
+        status: 'rejected'
+      }
+    });
+  };
   
   // Mock data - in a real app, this would come from the API
   const mockOrderData = {
