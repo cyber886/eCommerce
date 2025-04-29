@@ -161,6 +161,31 @@ export default function CheckoutPage() {
           timestamp: new Date().toISOString()
         }));
         console.log("Delivery time notification created for seller");
+        
+        // Store full order information for sellers
+        const orderKey = `order_${order.id || Date.now()}`;
+        localStorage.setItem(orderKey, JSON.stringify({
+          orderId: order.id || 1001,
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          customerPhone: data.customerPhone,
+          address: data.address,
+          city: data.city,
+          postalCode: data.postalCode,
+          deliveryDate: data.deliveryDate,
+          deliveryTime: data.deliveryTimeSlot,
+          deliveryType: data.deliveryType,
+          paymentMethod: data.paymentMethod,
+          total: grandTotal,
+          products: cartItems.map(item => ({
+            id: item.product.id,
+            name: item.product.name,
+            price: item.product.price,
+            quantity: item.quantity
+          })),
+          timestamp: new Date().toISOString()
+        }));
+        console.log("Complete order data stored for seller");
       } catch (err) {
         console.error("Failed to create delivery notification", err);
       }

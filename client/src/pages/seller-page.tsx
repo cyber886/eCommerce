@@ -614,7 +614,7 @@ export default function SellerPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product) => (
+                    {productsList.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>{product.name}</TableCell>
                         <TableCell>{product.category}</TableCell>
