@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Bell, ShoppingBag, X, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { format, addDays } from "date-fns";
 import {
   Popover,
   PopoverContent,
@@ -235,53 +236,56 @@ export default function Notifications({ role, onViewOrder }: NotificationsProps)
                                   Mijoz {notification.data.customerName} uchun muqobil vaqtni taklif qiling
                                 </DialogDescription>
                               </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <div className="flex flex-col space-y-2">
+                              <div className="py-4">
+                                <div className="flex flex-col space-y-4">
                                   <div className="bg-muted p-3 rounded-md text-sm">
                                     <p><strong>Mijoz tanlagan vaqti:</strong></p>
                                     <p>{notification.data.deliveryDate}, {notification.data.deliveryTime}</p>
                                   </div>
                                   
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="alternativeDate">Muqobil sana</Label>
-                                      <Select defaultValue="tomorrow">
-                                        <SelectTrigger id="alternativeDate">
-                                          <SelectValue placeholder="Sanani tanlang" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="tomorrow">Ertaga</SelectItem>
-                                          <SelectItem value="day-after">Ertadan keyin</SelectItem>
-                                          <SelectItem value="custom">Boshqa sana</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                      <Label htmlFor="alternativeTime">Muqobil vaqt</Label>
-                                      <Select defaultValue="10-12">
-                                        <SelectTrigger id="alternativeTime">
-                                          <SelectValue placeholder="Vaqtni tanlang" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="10-12">10:00 - 12:00</SelectItem>
-                                          <SelectItem value="12-14">12:00 - 14:00</SelectItem>
-                                          <SelectItem value="14-16">14:00 - 16:00</SelectItem>
-                                          <SelectItem value="16-18">16:00 - 18:00</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
+                                  <div>
+                                    <Label htmlFor="alternativeDate" className="text-sm font-medium mb-1.5 block">Muqobil sana</Label>
+                                    <Select defaultValue="tomorrow">
+                                      <SelectTrigger id="alternativeDate" className="w-full">
+                                        <SelectValue placeholder="Sanani tanlang" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="tomorrow">Ertaga</SelectItem>
+                                        <SelectItem value="dayAfter">Ertadan keyin</SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                   
-                                  <div className="pt-2">
-                                    <Label htmlFor="reason">Sabab (ixtiyoriy)</Label>
-                                    <Textarea id="reason" placeholder="Nima uchun vaqtni o'zgartirish kerakligini tushuntiring" className="mt-1" />
+                                  <div>
+                                    <Label htmlFor="alternativeTime" className="text-sm font-medium mb-1.5 block">Muqobil vaqt</Label>
+                                    <Select defaultValue="10-12">
+                                      <SelectTrigger id="alternativeTime" className="w-full">
+                                        <SelectValue placeholder="Vaqtni tanlang" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="8-10">8:00 - 10:00</SelectItem>
+                                        <SelectItem value="10-12">10:00 - 12:00</SelectItem>
+                                        <SelectItem value="12-14">12:00 - 14:00</SelectItem>
+                                        <SelectItem value="14-16">14:00 - 16:00</SelectItem>
+                                        <SelectItem value="16-18">16:00 - 18:00</SelectItem>
+                                        <SelectItem value="18-20">18:00 - 20:00</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor="reason" className="text-sm font-medium mb-1.5 block">Sabab (ixtiyoriy)</Label>
+                                    <Textarea 
+                                      id="reason" 
+                                      placeholder="Nima uchun vaqtni o'zgartirish kerakligini tushuntiring" 
+                                      rows={4}
+                                    />
                                   </div>
                                 </div>
                               </div>
-                              <DialogFooter>
-                                <Button type="button" variant="secondary" onClick={() => {}}>Bekor qilish</Button>
-                                <Button type="button" onClick={() => {}}>Mijozga yuborish</Button>
+                              <DialogFooter className="flex justify-between">
+                                <Button type="button" variant="outline" onClick={() => {}}>Bekor qilish</Button>
+                                <Button type="button" className="bg-blue-500 hover:bg-blue-600" onClick={() => {}}>Mijozga yuborish</Button>
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
