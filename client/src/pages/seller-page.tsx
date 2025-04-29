@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   BarChart, PlusCircle, Clock, ArrowUpDown, 
@@ -38,118 +38,7 @@ export default function SellerPage() {
     1004: 'pending',
   });
   
-  // Check localStorage for product selections and send notifications
-  useEffect(() => {
-    if (!user || user.role !== "seller") return;
-    
-    // Get all localStorage keys
-    const keys = Object.keys(localStorage);
-    
-    // Check for both product selections and delivery time selections
-    const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
-    const deliverySelectionKeys = keys.filter(key => key.startsWith('delivery_time_selected_'));
-    
-    // Process each product selection and send notification
-    productSelectionKeys.forEach(key => {
-      try {
-        const selectionData = JSON.parse(localStorage.getItem(key) || '');
-        if (selectionData) {
-          // Add notification for product selection
-          addNotification({
-            title: "Yangi mahsulot tanlandi",
-            message: `${selectionData.productName} mahsuloti savatchaga qo'shildi. Miqdori: ${selectionData.quantity}`,
-            type: "order",
-          });
-          
-          console.log("Product selection notification processed for seller");
-          
-          // Remove the localStorage item after processing
-          localStorage.removeItem(key);
-        }
-      } catch (err) {
-        console.error("Failed to process product selection notification", err);
-      }
-    });
-    
-    // Process each delivery time selection and send notification
-    deliverySelectionKeys.forEach(key => {
-      try {
-        const deliveryData = JSON.parse(localStorage.getItem(key) || '');
-        if (deliveryData) {
-          // Add notification for delivery time selection
-          addNotification({
-            title: "Yangi yetkazib berish vaqti tanlandi",
-            message: `Mijoz ${deliveryData.customerName} buyurtma #${deliveryData.orderId} uchun yetkazib berish vaqtini tanladi: ${deliveryData.deliveryDate}, ${deliveryData.deliveryTime}`,
-            type: "delivery",
-            data: {
-              deliveryDate: deliveryData.deliveryDate,
-              deliveryTime: deliveryData.deliveryTime,
-              customerName: deliveryData.customerName,
-              status: 'pending'
-            },
-            orderId: deliveryData.orderId,
-          });
-          
-          console.log("Delivery time notification processed for seller");
-          
-          // Remove the localStorage item after processing
-          localStorage.removeItem(key);
-        }
-      } catch (err) {
-        console.error("Failed to process delivery time notification", err);
-      }
-    });
-  }, [user, addNotification]);
-
-  // Parse URL params to get the active tab
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get('tab');
-    if (tab) {
-      setActiveTab(tab);
-    }
-    
-    const orderId = searchParams.get('order');
-    if (orderId) {
-      const order = recentOrders.find(o => o.id === parseInt(orderId));
-      if (order) {
-        openOrderDetailsDialog(order);
-      }
-    }
-  }, []);
-
-  const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-    navigate("/");
-  };
-
-  // Redirect non-sellers to auth page
-  if (!user) {
-    return (
-      <div className="container mx-auto py-20 text-center">
-        <h1 className="text-3xl font-bold mb-6">Sotuvchi boshqaruv paneli</h1>
-        <p className="mb-6">Sotuvchi boshqaruv paneliga kirish uchun tizimga kiring</p>
-        <Button onClick={() => navigate("/auth")}>Kirish sahifasiga o'tish</Button>
-      </div>
-    );
-  }
-
-  // Redirect non-sellers to buyer account
-  if (user.role !== "seller") {
-    return (
-      <div className="container mx-auto py-20 text-center">
-        <h1 className="text-3xl font-bold mb-6">Ruxsat berilmadi</h1>
-        <p className="mb-6">Bu sahifaga kirish uchun sotuvchi hisobi kerak</p>
-        <div className="flex gap-4 justify-center">
-          <Button onClick={() => navigate("/account")}>Hisobingizga o'tish</Button>
-          <Button variant="outline" onClick={() => navigate("/")}>Bosh sahifaga qaytish</Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Mock data for seller dashboard
-  const recentOrders = [
+  const [recentOrders, setRecentOrders] = useState([
     { 
       id: 1001, 
       customer: "Alisher Davronov", 
@@ -219,9 +108,164 @@ export default function SellerPage() {
       deliveryTimeSlot: "12:00 - 14:00",
       paymentMethod: "cash"
     }
-  ];
+  ]);
+  
+  // Check localStorage for buyer data and update seller interface
+  useEffect(() => {
+    if (!user || user.role !== "seller") return;
+    
+    // Get all localStorage keys
+    const keys = Object.keys(localStorage);
+    
+    // Check for product selections, delivery time selections, and new orders
+    const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
+    const deliverySelectionKeys = keys.filter(key => key.startsWith('delivery_time_selected_'));
+    const orderKeys = keys.filter(key => key.startsWith('order_'));
+    
+    // Process each product selection and send notification
+    productSelectionKeys.forEach(key => {
+      try {
+        const selectionData = JSON.parse(localStorage.getItem(key) || '');
+        if (selectionData) {
+          // Add notification for product selection
+          addNotification({
+            title: "Yangi mahsulot tanlandi",
+            message: `${selectionData.productName} mahsuloti savatchaga qo'shildi. Miqdori: ${selectionData.quantity}`,
+            type: "order",
+          });
+          
+          console.log("Product selection notification processed for seller");
+          
+          // Remove the localStorage item after processing
+          localStorage.removeItem(key);
+        }
+      } catch (err) {
+        console.error("Failed to process product selection notification", err);
+      }
+    });
+    
+    // Process each delivery time selection and send notification
+    deliverySelectionKeys.forEach(key => {
+      try {
+        const deliveryData = JSON.parse(localStorage.getItem(key) || '');
+        if (deliveryData) {
+          // Add notification for delivery time selection
+          addNotification({
+            title: "Yangi yetkazib berish vaqti tanlandi",
+            message: `Mijoz ${deliveryData.customerName} buyurtma #${deliveryData.orderId} uchun yetkazib berish vaqtini tanladi: ${deliveryData.deliveryDate}, ${deliveryData.deliveryTime}`,
+            type: "delivery",
+            data: {
+              deliveryDate: deliveryData.deliveryDate,
+              deliveryTime: deliveryData.deliveryTime,
+              customerName: deliveryData.customerName,
+              status: 'pending'
+            },
+            orderId: deliveryData.orderId,
+          });
+          
+          console.log("Delivery time notification processed for seller");
+          
+          // Remove the localStorage item after processing
+          localStorage.removeItem(key);
+        }
+      } catch (err) {
+        console.error("Failed to process delivery time notification", err);
+      }
+    });
+    
+    // Process buyer orders and add them to the seller's order list
+    orderKeys.forEach(key => {
+      try {
+        const orderData = JSON.parse(localStorage.getItem(key) || '');
+        if (orderData) {
+          // Check if this order already exists in our list
+          const orderExists = recentOrders.some(order => order.id === orderData.orderId);
+          
+          if (!orderExists && orderData.orderId) {
+            // Create a new order object from buyer data
+            const newOrder = {
+              id: orderData.orderId,
+              customer: orderData.customerName || "Yangi mijoz",
+              items: orderData.products ? orderData.products.length : 1,
+              total: orderData.total || 0,
+              status: "Pending",
+              date: new Date().toISOString().split('T')[0],
+              address: orderData.address || "Ma'lumot yo'q",
+              phone: orderData.phone || "Ma'lumot yo'q",
+              products: orderData.products || [],
+              deliveryDate: orderData.deliveryDate || "Tanlanmagan",
+              deliveryTimeSlot: orderData.deliveryTime || "Tanlanmagan",
+              paymentMethod: orderData.paymentMethod || "card"
+            };
+            
+            // Add to order list state
+            setRecentOrders(prev => [newOrder, ...prev]);
+            
+            // Add notification for new order
+            addNotification({
+              title: "Yangi buyurtma qabul qilindi",
+              message: `Mijoz ${newOrder.customer} tomonidan yangi buyurtma qabul qilindi.`,
+              type: "order",
+              orderId: newOrder.id,
+            });
+            
+            console.log("New order from buyer added to seller interface", newOrder);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to process buyer order data", err);
+      }
+    });
+  }, [user, addNotification, recentOrders]);
 
-  const products = [
+  // Parse URL params to get the active tab
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+    
+    const orderId = searchParams.get('order');
+    if (orderId) {
+      const order = recentOrders.find(o => o.id === parseInt(orderId));
+      if (order) {
+        openOrderDetailsDialog(order);
+      }
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    navigate("/");
+  };
+
+  // Redirect non-sellers to auth page
+  if (!user) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h1 className="text-3xl font-bold mb-6">Sotuvchi boshqaruv paneli</h1>
+        <p className="mb-6">Sotuvchi boshqaruv paneliga kirish uchun tizimga kiring</p>
+        <Button onClick={() => navigate("/auth")}>Kirish sahifasiga o'tish</Button>
+      </div>
+    );
+  }
+
+  // Redirect non-sellers to buyer account
+  if (user.role !== "seller") {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h1 className="text-3xl font-bold mb-6">Ruxsat berilmadi</h1>
+        <p className="mb-6">Bu sahifaga kirish uchun sotuvchi hisobi kerak</p>
+        <div className="flex gap-4 justify-center">
+          <Button onClick={() => navigate("/account")}>Hisobingizga o'tish</Button>
+          <Button variant="outline" onClick={() => navigate("/")}>Bosh sahifaga qaytish</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const productsList = [
     { id: 1, name: "Wireless Headphones", stock: 15, price: 79.99, category: "Electronics", description: "Premium wireless headphones with noise cancellation technology", imageUrl: "https://example.com/headphones.jpg" },
     { id: 2, name: "Smart Watch Series 5", stock: 8, price: 199.99, category: "Electronics", description: "Latest smart watch with health monitoring features", imageUrl: "https://example.com/smartwatch.jpg" },
     { id: 3, name: "Vintage Polaroid Camera", stock: 5, price: 149.99, category: "Electronics", description: "Retro-style instant photo camera", imageUrl: "https://example.com/camera.jpg" },
