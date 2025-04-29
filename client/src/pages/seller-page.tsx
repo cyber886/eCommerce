@@ -22,7 +22,12 @@ import SellerNavbar from "@/components/seller-navbar";
 import Notifications from "@/components/notifications";
 
 export default function SellerPage() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [location] = useLocation();
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const tabFromUrl = searchParams.get('tab');
+  const orderFromUrl = searchParams.get('order');
+  
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "dashboard");
   const { user, logoutMutation } = useAuth();
   const { addNotification } = useNotifications();
   const [, navigate] = useLocation();
@@ -218,22 +223,17 @@ export default function SellerPage() {
     });
   }, [user, addNotification, recentOrders]);
 
-  // Parse URL params to get the active tab
+  // Parse URL params to get the active tab and order
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get('tab');
-    if (tab) {
-      setActiveTab(tab);
-    }
-    
-    const orderId = searchParams.get('order');
-    if (orderId) {
-      const order = recentOrders.find(o => o.id === parseInt(orderId));
+    // Check if we need to show a specific order from URL parameter
+    if (orderFromUrl) {
+      const orderIdNum = parseInt(orderFromUrl);
+      const order = recentOrders.find(o => o.id === orderIdNum);
       if (order) {
         openOrderDetailsDialog(order);
       }
     }
-  }, []);
+  }, [orderFromUrl, recentOrders]);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
