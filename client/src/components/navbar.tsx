@@ -29,7 +29,8 @@ import {
   LogOut, 
   UserCircle, 
   Settings, 
-  Store 
+  Store,
+  Package
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LanguageSwitcher from "./language-switcher";
@@ -183,10 +184,16 @@ export default function Navbar() {
                       <span>{t('dashboard')}</span>
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={() => navigate("/account")}>
-                      <UserCircle className="h-4 w-4 mr-2" />
-                      <span>{t('account')}</span>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/account")}>
+                        <UserCircle className="h-4 w-4 mr-2" />
+                        <span>{t('account')}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/account?tab=orders")}>
+                        <Package className="h-4 w-4 mr-2" />
+                        <span>Заказы</span>
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuItem onClick={() => navigate("/account")}>
                     <Heart className="h-4 w-4 mr-2" />

@@ -92,7 +92,7 @@ export default function AccountPage() {
           </TabsTrigger>
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <ShoppingBag className="h-4 w-4" />
-            <span>Orders</span>
+            <span>Заказы</span>
           </TabsTrigger>
           <TabsTrigger value="wishlist" className="flex items-center gap-2">
             <Heart className="h-4 w-4" />

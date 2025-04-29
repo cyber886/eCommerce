@@ -98,7 +98,7 @@ export default function SellerNavbar() {
           <NavItem 
             href="/seller-page?tab=orders" 
             icon={<Package className="h-5 w-5" />} 
-            label={t('orders')} 
+            label="Заказы" 
             expanded={expanded}
           />
           <NavItem 
