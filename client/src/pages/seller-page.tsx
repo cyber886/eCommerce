@@ -76,7 +76,7 @@ export default function SellerPage() {
         openOrderDetailsDialog(order);
       }
     }
-  }, []);
+  }, [window.location.search]); // Re-run when URL changes
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
