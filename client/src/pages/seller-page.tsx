@@ -414,6 +414,12 @@ export default function SellerPage() {
           }}
           className="space-y-6"
         >
+          <TabsList className="mb-4">
+            <TabsTrigger value="dashboard">Asosiy panel</TabsTrigger>
+            <TabsTrigger value="orders">Buyurtmalar</TabsTrigger>
+            <TabsTrigger value="products">Mahsulotlar</TabsTrigger>
+            <TabsTrigger value="settings">Sozlamalar</TabsTrigger>
+          </TabsList>
           <TabsContent value="dashboard" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
