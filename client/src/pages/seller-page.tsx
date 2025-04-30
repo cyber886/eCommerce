@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import DeliveryTimeSelector from "@/components/delivery-time-selector";
 import SellerNavbar from "@/components/seller-navbar";
 import Notifications from "@/components/notifications";
+import { useTranslation } from "react-i18next";
 
 export default function SellerPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -276,15 +277,17 @@ export default function SellerPage() {
     );
   };
 
+  const { t } = useTranslation();
+
   return (
     <div className="flex h-screen">
       <SellerNavbar />
       
       <div className="flex-1 ml-64 p-8 overflow-y-auto"> {/* Adjust margin to match the width of the sidebar */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Sotuvchi boshqaruv paneli</h1>
+          <h1 className="text-3xl font-bold">{t('dashboard')}</h1>
           <p className="text-muted-foreground mt-2">
-            Buyurtmalarni boshqarish va mahsulotlarni nazorat qilish
+            {t('manageOrdersAndProducts')}
           </p>
         </div>
 
