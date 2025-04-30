@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CartItem, Product, insertOrderSchema } from "@shared/schema";
 import { useCart } from "@/hooks/use-cart";
-import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import Navbar from "@/components/navbar";
@@ -49,7 +48,6 @@ type CheckoutFormValues = Omit<z.infer<typeof checkoutFormSchema>, "sessionId" |
 export default function CheckoutPage() {
   const [, navigate] = useLocation();
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { user } = useAuth();
   const { toast } = useToast();
   const [isOrderComplete, setIsOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -66,21 +64,19 @@ export default function CheckoutPage() {
   const grandTotal = cartTotal + tax + shippingCost;
 
   // If cart is empty, redirect to home page
-  const { data: cartData } = useQuery<CartItemWithProduct[]>({
+  useQuery({
     queryKey: ["/api/cart"],
+    onSuccess: (data: CartItemWithProduct[]) => {
+      if (data.length === 0) {
+        toast({
+          title: "Cart is empty",
+          description: "You need to add items to your cart first",
+          variant: "destructive",
+        });
+        navigate("/");
+      }
+    },
   });
-  
-  // Check if cart is empty and redirect
-  useEffect(() => {
-    if (cartData && cartData.length === 0) {
-      toast({
-        title: "Cart is empty",
-        description: "You need to add items to your cart first",
-        variant: "destructive",
-      });
-      navigate("/");
-    }
-  }, [cartData, toast, navigate]);
 
   // Form setup
   const form = useForm<CheckoutFormValues>({
@@ -147,48 +143,6 @@ export default function CheckoutPage() {
 
       const response = await apiRequest("POST", "/api/orders", orderData);
       const order = await response.json();
-      
-      // Create delivery time notification for sellers
-      try {
-        // Store delivery time selection in localStorage to be picked up by seller
-        const deliveryNotificationKey = `delivery_time_selected_${order.id || Date.now()}`;
-        localStorage.setItem(deliveryNotificationKey, JSON.stringify({
-          customerId: user?.id || 'guest',
-          customerName: data.customerName,
-          deliveryDate: data.deliveryDate,
-          deliveryTime: data.deliveryTimeSlot,
-          orderId: order.id || 1001,
-          timestamp: new Date().toISOString()
-        }));
-        console.log("Delivery time notification created for seller");
-        
-        // Store full order information for sellers
-        const orderKey = `order_${order.id || Date.now()}`;
-        localStorage.setItem(orderKey, JSON.stringify({
-          orderId: order.id || 1001,
-          customerName: data.customerName,
-          customerEmail: data.customerEmail,
-          customerPhone: data.customerPhone,
-          address: data.address,
-          city: data.city,
-          postalCode: data.postalCode,
-          deliveryDate: data.deliveryDate,
-          deliveryTime: data.deliveryTimeSlot,
-          deliveryType: data.deliveryType,
-          paymentMethod: data.paymentMethod,
-          total: grandTotal,
-          products: cartItems.map(item => ({
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price,
-            quantity: item.quantity
-          })),
-          timestamp: new Date().toISOString()
-        }));
-        console.log("Complete order data stored for seller");
-      } catch (err) {
-        console.error("Failed to create delivery notification", err);
-      }
       
       // Show confirmation and clear cart
       setOrderId(order.id);

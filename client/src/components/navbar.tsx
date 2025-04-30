@@ -29,12 +29,10 @@ import {
   LogOut, 
   UserCircle, 
   Settings, 
-  Store,
-  Package
+  Store 
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LanguageSwitcher from "./language-switcher";
-import Notifications from "./notifications";
 
 export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -119,16 +117,6 @@ export default function Navbar() {
           {/* Language switcher */}
           <LanguageSwitcher />
           
-          {/* Notifications for buyers */}
-          {user && user.role === "buyer" && (
-            <Notifications 
-              role="buyer" 
-              onViewOrder={(orderId) => {
-                navigate(`/tracking?orderId=${orderId}`);
-              }}
-            />
-          )}
-          
           {/* Search button */}
           <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
             <SheetTrigger asChild>
@@ -184,16 +172,10 @@ export default function Navbar() {
                       <span>{t('dashboard')}</span>
                     </DropdownMenuItem>
                   ) : (
-                    <>
-                      <DropdownMenuItem onClick={() => navigate("/account")}>
-                        <UserCircle className="h-4 w-4 mr-2" />
-                        <span>{t('account')}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/account?tab=orders")}>
-                        <Package className="h-4 w-4 mr-2" />
-                        <span>Заказы</span>
-                      </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem onClick={() => navigate("/account")}>
+                      <UserCircle className="h-4 w-4 mr-2" />
+                      <span>{t('account')}</span>
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => navigate("/account")}>
                     <Heart className="h-4 w-4 mr-2" />

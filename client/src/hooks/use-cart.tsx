@@ -72,14 +72,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // This notification will be visible to sellers when they log in
         // In a real app, we'd use a back-end notification system with WebSockets
         // to notify sellers in real-time
-        const uniqueKey = `product_selected_${variables.productId}_${Date.now()}`;
-        window.localStorage.setItem(uniqueKey, JSON.stringify({
+        window.localStorage.setItem(`product_selected_${variables.productId}`, JSON.stringify({
           productId: variables.productId,
           productName: product.name,
           quantity: variables.quantity,
           timestamp: new Date().toISOString()
         }));
-        console.log("Product selection notification created:", product.name);
       } catch (err) {
         console.error("Failed to store product selection for seller notification", err);
       }

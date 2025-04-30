@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   BarChart, PlusCircle, Clock, ArrowUpDown, 
@@ -17,17 +17,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import DeliveryTimeSelector from "@/components/delivery-time-selector";
-import DeliveryTimeAnalyzer from "@/components/delivery-time-analyzer";
 import SellerNavbar from "@/components/seller-navbar";
 import Notifications from "@/components/notifications";
 
 export default function SellerPage() {
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split('?')[1] || '');
-  const tabFromUrl = searchParams.get('tab');
-  const orderFromUrl = searchParams.get('order');
-  
-  const [activeTab, setActiveTab] = useState(tabFromUrl || "dashboard");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const { user, logoutMutation } = useAuth();
   const { addNotification } = useNotifications();
   const [, navigate] = useLocation();
@@ -36,14 +30,85 @@ export default function SellerPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showOrderDetailsDialog, setShowOrderDetailsDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [deliveryStatus, setDeliveryStatus] = useState<Record<number, 'pending' | 'accepted' | 'rejected'>>({
-    1001: 'pending',
-    1002: 'pending',
-    1003: 'pending',
-    1004: 'pending',
-  });
   
-  const [recentOrders, setRecentOrders] = useState([
+  // Check localStorage for product selections and send notifications
+  useEffect(() => {
+    if (!user || user.role !== "seller") return;
+    
+    // Get all localStorage keys
+    const keys = Object.keys(localStorage);
+    const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
+    
+    // Process each product selection and send notification
+    productSelectionKeys.forEach(key => {
+      try {
+        const selectionData = JSON.parse(localStorage.getItem(key) || '');
+        if (selectionData) {
+          // Add notification for product selection
+          addNotification({
+            title: "Yangi mahsulot tanlandi",
+            message: `${selectionData.productName} mahsuloti savatchaga qo'shildi. Miqdori: ${selectionData.quantity}`,
+            type: "order",
+          });
+          
+          // Remove the localStorage item after processing
+          localStorage.removeItem(key);
+        }
+      } catch (err) {
+        console.error("Failed to process product selection notification", err);
+      }
+    });
+  }, [user, addNotification]);
+
+  // Parse URL params to get the active tab
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+    
+    const orderId = searchParams.get('order');
+    if (orderId) {
+      const order = recentOrders.find(o => o.id === parseInt(orderId));
+      if (order) {
+        openOrderDetailsDialog(order);
+      }
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    navigate("/");
+  };
+
+  // Redirect non-sellers to auth page
+  if (!user) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h1 className="text-3xl font-bold mb-6">Sotuvchi boshqaruv paneli</h1>
+        <p className="mb-6">Sotuvchi boshqaruv paneliga kirish uchun tizimga kiring</p>
+        <Button onClick={() => navigate("/auth")}>Kirish sahifasiga o'tish</Button>
+      </div>
+    );
+  }
+
+  // Redirect non-sellers to buyer account
+  if (user.role !== "seller") {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h1 className="text-3xl font-bold mb-6">Ruxsat berilmadi</h1>
+        <p className="mb-6">Bu sahifaga kirish uchun sotuvchi hisobi kerak</p>
+        <div className="flex gap-4 justify-center">
+          <Button onClick={() => navigate("/account")}>Hisobingizga o'tish</Button>
+          <Button variant="outline" onClick={() => navigate("/")}>Bosh sahifaga qaytish</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Mock data for seller dashboard
+  const recentOrders = [
     { 
       id: 1001, 
       customer: "Alisher Davronov", 
@@ -113,159 +178,9 @@ export default function SellerPage() {
       deliveryTimeSlot: "12:00 - 14:00",
       paymentMethod: "cash"
     }
-  ]);
-  
-  // Check localStorage for buyer data and update seller interface
-  useEffect(() => {
-    if (!user || user.role !== "seller") return;
-    
-    // Get all localStorage keys
-    const keys = Object.keys(localStorage);
-    
-    // Check for product selections, delivery time selections, and new orders
-    const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
-    const deliverySelectionKeys = keys.filter(key => key.startsWith('delivery_time_selected_'));
-    const orderKeys = keys.filter(key => key.startsWith('order_'));
-    
-    // Process each product selection and send notification
-    productSelectionKeys.forEach(key => {
-      try {
-        const selectionData = JSON.parse(localStorage.getItem(key) || '');
-        if (selectionData) {
-          // Add notification for product selection
-          addNotification({
-            title: "Yangi mahsulot tanlandi",
-            message: `${selectionData.productName} mahsuloti savatchaga qo'shildi. Miqdori: ${selectionData.quantity}`,
-            type: "order",
-          });
-          
-          console.log("Product selection notification processed for seller");
-          
-          // Remove the localStorage item after processing
-          localStorage.removeItem(key);
-        }
-      } catch (err) {
-        console.error("Failed to process product selection notification", err);
-      }
-    });
-    
-    // Process each delivery time selection and send notification
-    deliverySelectionKeys.forEach(key => {
-      try {
-        const deliveryData = JSON.parse(localStorage.getItem(key) || '');
-        if (deliveryData) {
-          // Add notification for delivery time selection
-          addNotification({
-            title: "Yangi yetkazib berish vaqti tanlandi",
-            message: `Mijoz ${deliveryData.customerName} buyurtma #${deliveryData.orderId} uchun yetkazib berish vaqtini tanladi: ${deliveryData.deliveryDate}, ${deliveryData.deliveryTime}`,
-            type: "delivery",
-            data: {
-              deliveryDate: deliveryData.deliveryDate,
-              deliveryTime: deliveryData.deliveryTime,
-              customerName: deliveryData.customerName,
-              status: 'pending'
-            },
-            orderId: deliveryData.orderId,
-          });
-          
-          console.log("Delivery time notification processed for seller");
-          
-          // Remove the localStorage item after processing
-          localStorage.removeItem(key);
-        }
-      } catch (err) {
-        console.error("Failed to process delivery time notification", err);
-      }
-    });
-    
-    // Process buyer orders and add them to the seller's order list
-    orderKeys.forEach(key => {
-      try {
-        const orderData = JSON.parse(localStorage.getItem(key) || '');
-        if (orderData) {
-          // Check if this order already exists in our list
-          const orderExists = recentOrders.some(order => order.id === orderData.orderId);
-          
-          if (!orderExists && orderData.orderId) {
-            // Create a new order object from buyer data
-            const newOrder = {
-              id: orderData.orderId,
-              customer: orderData.customerName || "Yangi mijoz",
-              items: orderData.products ? orderData.products.length : 1,
-              total: orderData.total || 0,
-              status: "Pending",
-              date: new Date().toISOString().split('T')[0],
-              address: orderData.address || "Ma'lumot yo'q",
-              phone: orderData.phone || "Ma'lumot yo'q",
-              products: orderData.products || [],
-              deliveryDate: orderData.deliveryDate || "Tanlanmagan",
-              deliveryTimeSlot: orderData.deliveryTime || "Tanlanmagan",
-              paymentMethod: orderData.paymentMethod || "card"
-            };
-            
-            // Add to order list state
-            setRecentOrders(prev => [newOrder, ...prev]);
-            
-            // Add notification for new order
-            addNotification({
-              title: "Yangi buyurtma qabul qilindi",
-              message: `Mijoz ${newOrder.customer} tomonidan yangi buyurtma qabul qilindi.`,
-              type: "order",
-              orderId: newOrder.id,
-            });
-            
-            console.log("New order from buyer added to seller interface", newOrder);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to process buyer order data", err);
-      }
-    });
-  }, [user, addNotification, recentOrders]);
+  ];
 
-  // Parse URL params to get the active tab and order
-  useEffect(() => {
-    // Check if we need to show a specific order from URL parameter
-    if (orderFromUrl) {
-      const orderIdNum = parseInt(orderFromUrl);
-      const order = recentOrders.find(o => o.id === orderIdNum);
-      if (order) {
-        openOrderDetailsDialog(order);
-      }
-    }
-  }, [orderFromUrl, recentOrders]);
-
-  const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-    navigate("/");
-  };
-
-  // Redirect non-sellers to auth page
-  if (!user) {
-    return (
-      <div className="container mx-auto py-20 text-center">
-        <h1 className="text-3xl font-bold mb-6">Sotuvchi boshqaruv paneli</h1>
-        <p className="mb-6">Sotuvchi boshqaruv paneliga kirish uchun tizimga kiring</p>
-        <Button onClick={() => navigate("/auth")}>Kirish sahifasiga o'tish</Button>
-      </div>
-    );
-  }
-
-  // Redirect non-sellers to buyer account
-  if (user.role !== "seller") {
-    return (
-      <div className="container mx-auto py-20 text-center">
-        <h1 className="text-3xl font-bold mb-6">Ruxsat berilmadi</h1>
-        <p className="mb-6">Bu sahifaga kirish uchun sotuvchi hisobi kerak</p>
-        <div className="flex gap-4 justify-center">
-          <Button onClick={() => navigate("/account")}>Hisobingizga o'tish</Button>
-          <Button variant="outline" onClick={() => navigate("/")}>Bosh sahifaga qaytish</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const productsList = [
+  const products = [
     { id: 1, name: "Wireless Headphones", stock: 15, price: 79.99, category: "Electronics", description: "Premium wireless headphones with noise cancellation technology", imageUrl: "https://example.com/headphones.jpg" },
     { id: 2, name: "Smart Watch Series 5", stock: 8, price: 199.99, category: "Electronics", description: "Latest smart watch with health monitoring features", imageUrl: "https://example.com/smartwatch.jpg" },
     { id: 3, name: "Vintage Polaroid Camera", stock: 5, price: 149.99, category: "Electronics", description: "Retro-style instant photo camera", imageUrl: "https://example.com/camera.jpg" },
@@ -301,6 +216,13 @@ export default function SellerPage() {
     setSelectedProduct(product);
     setShowProductDialog(true);
   };
+
+  const [deliveryStatus, setDeliveryStatus] = useState<Record<number, 'pending' | 'accepted' | 'rejected'>>({
+    1001: 'pending',
+    1002: 'pending',
+    1003: 'pending',
+    1004: 'pending',
+  });
   
   const openOrderDetailsDialog = (order: any) => {
     setSelectedOrder(order);
@@ -314,43 +236,6 @@ export default function SellerPage() {
       [orderId]: 'accepted'
     }));
     console.log("Accepted delivery time for order:", orderId);
-    
-    // Store info in localStorage to communicate with buyer interface
-    const order = recentOrders.find(o => o.id === orderId);
-    if (order) {
-      localStorage.setItem(`delivery_response_${orderId}`, JSON.stringify({
-        orderId,
-        customerName: order.customer,
-        status: 'accepted',
-        deliveryDate: order.deliveryDate,
-        deliveryTime: order.deliveryTimeSlot,
-      }));
-    }
-  };
-  
-  const handleSuggestAlternative = (orderId: number, alternativeDate: string, alternativeTime: string, reason: string) => {
-    // In a real implementation, this would send an API request to suggest an alternative time and notify customer
-    console.log("Suggesting alternative delivery time for order:", orderId, alternativeDate, alternativeTime, reason);
-    // For demo, set status to rejected (when proposing an alternative)
-    setDeliveryStatus(prev => ({
-      ...prev,
-      [orderId]: 'rejected'
-    }));
-    
-    // Store info in localStorage to communicate with buyer interface
-    const order = recentOrders.find(o => o.id === orderId);
-    if (order) {
-      localStorage.setItem(`delivery_response_${orderId}`, JSON.stringify({
-        orderId,
-        customerName: order.customer,
-        status: 'alternative',
-        deliveryDate: order.deliveryDate,
-        deliveryTime: order.deliveryTimeSlot,
-        alternativeDate,
-        alternativeTime,
-        reason
-      }));
-    }
   };
 
   // Status badge component
@@ -414,12 +299,6 @@ export default function SellerPage() {
           }}
           className="space-y-6"
         >
-          <TabsList className="mb-4">
-            <TabsTrigger value="dashboard">Asosiy panel</TabsTrigger>
-            <TabsTrigger value="orders">Buyurtmalar</TabsTrigger>
-            <TabsTrigger value="products">Mahsulotlar</TabsTrigger>
-            <TabsTrigger value="settings">Sozlamalar</TabsTrigger>
-          </TabsList>
           <TabsContent value="dashboard" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
@@ -612,35 +491,44 @@ export default function SellerPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nomi</TableHead>
-                      <TableHead>Kategoriya</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Mahsulot nomi</TableHead>
+                      <TableHead>Zaxira</TableHead>
                       <TableHead>Narx</TableHead>
-                      <TableHead>Mavjud</TableHead>
+                      <TableHead>Kategoriya</TableHead>
                       <TableHead className="text-right">Amallar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {productsList.map((product) => (
+                    {products.map((product) => (
                       <TableRow key={product.id}>
+                        <TableCell>#{product.id}</TableCell>
                         <TableCell>{product.name}</TableCell>
-                        <TableCell>{product.category}</TableCell>
+                        <TableCell>
+                          <span className={product.stock < 10 ? "text-red-600" : "text-green-600"}>
+                            {product.stock}
+                          </span>
+                        </TableCell>
                         <TableCell>${product.price.toFixed(2)}</TableCell>
-                        <TableCell>{product.stock}</TableCell>
+                        <TableCell>{product.category}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button 
                               variant="ghost" 
-                              size="sm"
+                              size="sm" 
                               onClick={() => openProductDialog("edit", product)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4 mr-1" />
+                              Tahrirlash
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="sm"
+                              className="text-red-500 hover:text-red-700"
                               onClick={() => deleteProduct(product.id)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              O'chirish
                             </Button>
                           </div>
                         </TableCell>
@@ -651,15 +539,15 @@ export default function SellerPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Do'kon ma'lumotlari</CardTitle>
-                <CardDescription>Do'kon ma'lumotlarini tahrirlang</CardDescription>
+                <CardTitle>Do'kon sozlamalari</CardTitle>
+                <CardDescription>Do'kon uchun asosiy sozlamalarni boshqaring</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
+                <div className="grid gap-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="storeName" className="text-right">
                       Do'kon nomi
@@ -766,14 +654,16 @@ export default function SellerPage() {
 
               <div>
                 <h3 className="text-sm font-medium mb-2">Yetkazib berish vaqti</h3>
-                <DeliveryTimeAnalyzer
-                  orderId={selectedOrder.id}
-                  customerName={selectedOrder.customer}
-                  deliveryDate={selectedOrder.deliveryDate}
-                  deliveryTime={selectedOrder.deliveryTimeSlot}
-                  status={deliveryStatus[selectedOrder.id] || 'pending'}
-                  onAccept={handleAcceptDelivery}
-                  onSuggestAlternative={handleSuggestAlternative}
+                <DeliveryTimeSelector
+                  onDateChange={() => {}}
+                  onTimeSlotChange={() => {}}
+                  onDeliveryTypeChange={() => {}}
+                  selectedDate={selectedOrder.deliveryDate}
+                  selectedTimeSlot={selectedOrder.deliveryTimeSlot}
+                  selectedDeliveryType="standard"
+                  isSeller={true}
+                  onAcceptDelivery={() => handleAcceptDelivery(selectedOrder.id)}
+                  deliveryStatus={deliveryStatus[selectedOrder.id]}
                 />
               </div>
 
@@ -815,13 +705,13 @@ export default function SellerPage() {
                 : "Mavjud mahsulot ma'lumotlarini tahrirlang"}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productName" className="text-right">
                 Nomi
               </Label>
               <Input 
-                id="productName"
+                id="productName" 
                 defaultValue={selectedProduct?.name || ""} 
                 className="col-span-3" 
               />
@@ -837,74 +727,53 @@ export default function SellerPage() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="productCategory" className="text-right">
-                Kategoriya
-              </Label>
-              <Select defaultValue={selectedProduct?.category || "Electronics"}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Kategoriyani tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Electronics">Elektronika</SelectItem>
-                  <SelectItem value="Clothing">Kiyim</SelectItem>
-                  <SelectItem value="Home">Uy jihozlari</SelectItem>
-                  <SelectItem value="Beauty">Go'zallik</SelectItem>
-                  <SelectItem value="Sports">Sport</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productPrice" className="text-right">
-                Narx
+                Narxi
               </Label>
               <Input 
                 id="productPrice" 
-                type="number"
-                defaultValue={selectedProduct?.price || ""}
+                type="number" 
+                defaultValue={selectedProduct?.price || ""} 
                 className="col-span-3" 
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productStock" className="text-right">
-                Mavjud miqdori
+                Zaxirada
               </Label>
               <Input 
                 id="productStock" 
-                type="number"
-                defaultValue={selectedProduct?.stock || ""}
+                type="number" 
+                defaultValue={selectedProduct?.stock || ""} 
                 className="col-span-3" 
               />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="productCategory" className="text-right">
+                Kategoriya
+              </Label>
+              <Select defaultValue={selectedProduct?.category || "electronics"}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Kategoriyani tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="electronics">Elektronika</SelectItem>
+                  <SelectItem value="clothing">Kiyim-kechak</SelectItem>
+                  <SelectItem value="home">Uy jihozlari</SelectItem>
+                  <SelectItem value="books">Kitoblar</SelectItem>
+                  <SelectItem value="sports">Sport jihozlari</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productImage" className="text-right">
                 Rasm
               </Label>
-              <Input 
-                id="productImage" 
-                type="file"
-                className="col-span-3" 
-              />
+              <Input id="productImage" type="file" className="col-span-3" />
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              onClick={() => 
-                productAction === "add" 
-                  ? addNewProduct({
-                      name: (document.getElementById("productName") as HTMLInputElement)?.value,
-                      description: (document.getElementById("productDescription") as HTMLTextAreaElement)?.value,
-                      price: parseFloat((document.getElementById("productPrice") as HTMLInputElement)?.value || "0"),
-                      stock: parseInt((document.getElementById("productStock") as HTMLInputElement)?.value || "0"),
-                    })
-                  : editProduct({
-                      id: selectedProduct?.id,
-                      name: (document.getElementById("productName") as HTMLInputElement)?.value,
-                      description: (document.getElementById("productDescription") as HTMLTextAreaElement)?.value,
-                      price: parseFloat((document.getElementById("productPrice") as HTMLInputElement)?.value || "0"),
-                      stock: parseInt((document.getElementById("productStock") as HTMLInputElement)?.value || "0"),
-                    })
-              }
-            >
+            <Button onClick={() => productAction === "add" ? addNewProduct({}) : editProduct({})}>
               {productAction === "add" ? "Qo'shish" : "Saqlash"}
             </Button>
           </DialogFooter>

@@ -92,7 +92,7 @@ export default function AccountPage() {
           </TabsTrigger>
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <ShoppingBag className="h-4 w-4" />
-            <span>Заказы</span>
+            <span>Orders</span>
           </TabsTrigger>
           <TabsTrigger value="wishlist" className="flex items-center gap-2">
             <Heart className="h-4 w-4" />
@@ -153,7 +153,7 @@ export default function AccountPage() {
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : purchaseHistory && Array.isArray(purchaseHistory) && purchaseHistory.length > 0 ? (
+              ) : purchaseHistory && purchaseHistory.length > 0 ? (
                 <div className="space-y-6">
                   {purchaseHistory.map((orderData: any) => (
                     <Card key={orderData.order.id} className="overflow-hidden">
@@ -217,7 +217,7 @@ export default function AccountPage() {
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : wishlist && Array.isArray(wishlist) && wishlist.length > 0 ? (
+              ) : wishlist && wishlist.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {wishlist.map((item: any) => (
                     <Card key={item.id} className="overflow-hidden">
