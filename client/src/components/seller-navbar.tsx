@@ -160,8 +160,17 @@ export default function SellerNavbar() {
 
 function NavItem({ href, icon, label, expanded }: { href: string; icon: React.ReactNode; label: string; expanded: boolean }) {
   const [location] = useLocation();
-  const isActive = location === href || 
-    (href.includes('?tab=') && location.includes(href.split('?')[0]) && location.includes(href.split('?tab=')[1]?.split('&')[0] || ''));
+  // Check if this link's tab parameter matches the current URL's tab parameter
+  let isActive = location === href;
+  
+  // Special handling for tab links
+  if (href.includes('?tab=')) {
+    const currentTab = href.split('?tab=')[1]?.split('&')[0];
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab');
+    
+    isActive = activeTab === currentTab;
+  }
 
   return (
     <Link href={href}>
