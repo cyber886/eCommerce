@@ -387,22 +387,22 @@ export default function SellerPage() {
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>Buyurtmalar boshqaruvi</CardTitle>
-                    <CardDescription>Mijoz buyurtmalarini boshqaring</CardDescription>
+                    <CardTitle>{t('ordersManagement')}</CardTitle>
+                    <CardDescription>{t('manageCustomerOrders')}</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Input placeholder="Buyurtmalarni qidirish..." className="w-[250px]" />
+                    <Input placeholder={t('searchOrders')} className="w-[250px]" />
                     <Select defaultValue="all">
                       <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Filtrlash" />
+                        <SelectValue placeholder={t('filterOrders')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Barcha buyurtmalar</SelectItem>
-                        <SelectItem value="pending">Kutilayotgan</SelectItem>
-                        <SelectItem value="processing">Jarayonda</SelectItem>
-                        <SelectItem value="shipped">Jo'natilgan</SelectItem>
-                        <SelectItem value="delivered">Yetkazilgan</SelectItem>
-                        <SelectItem value="cancelled">Bekor qilingan</SelectItem>
+                        <SelectItem value="all">{t('allOrders')}</SelectItem>
+                        <SelectItem value="pending">{t('pending')}</SelectItem>
+                        <SelectItem value="processing">{t('processing')}</SelectItem>
+                        <SelectItem value="shipped">{t('shipped')}</SelectItem>
+                        <SelectItem value="delivered">{t('delivered')}</SelectItem>
+                        <SelectItem value="cancelled">{t('cancelled')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -414,26 +414,26 @@ export default function SellerPage() {
                     <TableRow>
                       <TableHead>
                         <div className="flex items-center space-x-1">
-                          <span>Buyurtma ID</span>
+                          <span>{t('orderID')}</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </TableHead>
-                      <TableHead>Mijoz</TableHead>
-                      <TableHead>Mahsulotlar</TableHead>
-                      <TableHead>Jami</TableHead>
+                      <TableHead>{t('customerInfo')}</TableHead>
+                      <TableHead>{t('products')}</TableHead>
+                      <TableHead>{t('total')}</TableHead>
                       <TableHead>
                         <div className="flex items-center space-x-1">
-                          <span>Holati</span>
+                          <span>{t('deliveryStatus')}</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center space-x-1">
-                          <span>Sana</span>
+                          <span>{t('orderDate')}</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </TableHead>
-                      <TableHead className="text-right">Amallar</TableHead>
+                      <TableHead className="text-right">{t('updateStatus')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -454,14 +454,14 @@ export default function SellerPage() {
                               size="sm"
                               onClick={() => openOrderDetailsDialog(order)}
                             >
-                              Ko'rish
+                              {t('view')}
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => openOrderDetailsDialog(order)}
                             >
-                              Yangilash
+                              {t('update')}
                             </Button>
                           </div>
                         </TableCell>
