@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Product } from "@shared/schema";
 import { Button } from "@/components/ui/button";
