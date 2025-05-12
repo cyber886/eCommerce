@@ -20,11 +20,37 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product.id);
   };
 
-  const toggleWishlist = (e: React.MouseEvent) => {
+  const toggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    
+    try {
+      if (isWishlisted) {
+        await fetch(`/api/wishlist/${product.id}`, {
+          method: 'DELETE'
+        });
+      } else {
+        await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ productId: product.id })
+        });
+      }
+      setIsWishlisted(!isWishlisted);
+    } catch (error) {
+      console.error('Failed to toggle wishlist:', error);
+    }
   };
+
+  // Check initial wishlist status
+  useEffect(() => {
+    fetch(`/api/wishlist/check/${product.id}`)
+      .then(res => res.json())
+      .then(data => setIsWishlisted(data.inWishlist))
+      .catch(console.error);
+  }, [product.id]);
 
   return (
     <Link href={`/product/${product.id}`}>
