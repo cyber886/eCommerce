@@ -98,14 +98,6 @@ export default function AccountPage() {
             <Heart className="h-4 w-4" />
             <span>Wishlist</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span>Settings</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span>Notifications</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -137,7 +129,32 @@ export default function AccountPage() {
                   <p className="col-span-2">{formatDate(user.createdAt as unknown as string)}</p>
                 </div>
               </div>
-              <Button className="mt-4" variant="outline">Edit Profile</Button>
+              <Button 
+                className="mt-4" 
+                variant="outline" 
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/user/profile', {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        fullName: user.fullName,
+                        email: user.email,
+                      }),
+                    });
+                    if (response.ok) {
+                      // Refresh user data
+                      window.location.reload();
+                    }
+                  } catch (error) {
+                    console.error('Error updating profile:', error);
+                  }
+                }}
+              >
+                Edit Profile
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -252,55 +269,7 @@ export default function AccountPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-              <CardDescription>Manage your account preferences</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Password</p>
-                    <p className="text-sm text-muted-foreground">Change your password</p>
-                  </div>
-                  <Button variant="outline">Change</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Manage email notification preferences</p>
-                  </div>
-                  <Button variant="outline">Configure</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Language</p>
-                    <p className="text-sm text-muted-foreground">Change your language preferences</p>
-                  </div>
-                  <Button variant="outline">Change</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>View your recent notifications and updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-10">
-                <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No notifications</h3>
-                <p className="text-muted-foreground">You're all caught up! We'll notify you when there's news.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        
       </Tabs>
     </div>
   );
