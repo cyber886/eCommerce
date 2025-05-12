@@ -129,10 +129,10 @@ export default function AccountPage() {
                   <p className="col-span-2">{formatDate(user.createdAt as unknown as string)}</p>
                 </div>
               </div>
-              <Button 
-                className="mt-4" 
-                variant="outline" 
-                onClick={async () => {
+              <div className="border-t mt-4 pt-4">
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
                   try {
                     const response = await fetch('/api/user/profile', {
                       method: 'PUT',
@@ -140,21 +140,63 @@ export default function AccountPage() {
                         'Content-Type': 'application/json',
                       },
                       body: JSON.stringify({
-                        fullName: user.fullName,
-                        email: user.email,
+                        fullName: formData.get('fullName'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        address: formData.get('address'),
                       }),
                     });
                     if (response.ok) {
-                      // Refresh user data
                       window.location.reload();
                     }
                   } catch (error) {
                     console.error('Error updating profile:', error);
                   }
-                }}
-              >
-                Edit Profile
-              </Button>
+                }}>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="fullName">To'liq ism</Label>
+                      <Input 
+                        id="fullName"
+                        name="fullName"
+                        defaultValue={user.fullName || ''}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email"
+                        name="email"
+                        type="email"
+                        defaultValue={user.email || ''}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Telefon</Label>
+                      <Input 
+                        id="phone"
+                        name="phone"
+                        defaultValue={user.phone || ''}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="address">Manzil</Label>
+                      <Textarea 
+                        id="address"
+                        name="address"
+                        defaultValue={user.address || ''}
+                        className="mt-1"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Saqlash
+                    </Button>
+                  </div>
+                </form>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
