@@ -31,15 +31,15 @@ export default function SellerPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showOrderDetailsDialog, setShowOrderDetailsDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  
+
   // Check localStorage for product selections and send notifications
   useEffect(() => {
     if (!user || user.role !== "seller") return;
-    
+
     // Get all localStorage keys
     const keys = Object.keys(localStorage);
     const productSelectionKeys = keys.filter(key => key.startsWith('product_selected_'));
-    
+
     // Process each product selection and send notification
     productSelectionKeys.forEach(key => {
       try {
@@ -51,7 +51,7 @@ export default function SellerPage() {
             message: `${selectionData.productName} mahsuloti savatchaga qo'shildi. Miqdori: ${selectionData.quantity}`,
             type: "order",
           });
-          
+
           // Remove the localStorage item after processing
           localStorage.removeItem(key);
         }
@@ -68,7 +68,7 @@ export default function SellerPage() {
     if (tab) {
       setActiveTab(tab);
     }
-    
+
     const orderId = searchParams.get('order');
     if (orderId) {
       const order = recentOrders.find(o => o.id === parseInt(orderId));
@@ -224,12 +224,12 @@ export default function SellerPage() {
     1003: 'pending',
     1004: 'pending',
   });
-  
+
   const openOrderDetailsDialog = (order: any) => {
     setSelectedOrder(order);
     setShowOrderDetailsDialog(true);
   };
-  
+
   const handleAcceptDelivery = (orderId: number) => {
     // In a real implementation, this would send an API request
     setDeliveryStatus(prev => ({
@@ -281,8 +281,8 @@ export default function SellerPage() {
 
   return (
     <div className="flex h-screen">
-      <SellerNavbar />
-      
+      <SellerNavbar setShowProductDialog={setShowProductDialog} />
+
       <div className="flex-1 ml-64 p-8 overflow-y-auto"> {/* Adjust margin to match the width of the sidebar */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{t('dashboard')}</h1>

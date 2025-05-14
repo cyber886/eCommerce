@@ -8,7 +8,11 @@ import { BarChart3, Package, Users, Settings, LogOut, AlertCircle, Loader2, Plus
 import Notifications from "./notifications";
 import LanguageSwitcher from "./language-switcher";
 
-export default function SellerNavbar() {
+interface SellerNavbarProps {
+  setShowProductDialog: (show: boolean) => void;
+}
+
+export default function SellerNavbar({ setShowProductDialog }: SellerNavbarProps) {
   const { user, logoutMutation } = useAuth();
   const [, navigate] = useLocation();
   const [expanded, setExpanded] = useState(true);
