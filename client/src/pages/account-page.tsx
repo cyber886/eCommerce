@@ -87,19 +87,11 @@ export default function AccountPage() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value="profile" className="space-y-6">
         <TabsList className="bg-background border w-full flex justify-start overflow-x-auto">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             <span>Profile</span>
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center gap-2">
-            <ShoppingBag className="h-4 w-4" />
-            <span>Orders</span>
-          </TabsTrigger>
-          <TabsTrigger value="wishlist" className="flex items-center gap-2">
-            <Heart className="h-4 w-4" />
-            <span>Wishlist</span>
           </TabsTrigger>
         </TabsList>
 
@@ -203,118 +195,6 @@ export default function AccountPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="orders" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Order History</CardTitle>
-              <CardDescription>View your recent orders and track their status</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {isLoadingHistory ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : purchaseHistory && purchaseHistory.length > 0 ? (
-                <div className="space-y-6">
-                  {purchaseHistory.map((orderData: any) => (
-                    <Card key={orderData.order.id} className="overflow-hidden">
-                      <div className="bg-muted p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <p className="font-medium">Order #{orderData.order.id}</p>
-                            <p className="text-sm text-muted-foreground">{formatDate(orderData.order.createdAt as unknown as string)}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">${orderData.order.total.toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Delivery: {orderData.order.deliveryDate} ({orderData.order.deliveryTimeSlot})
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <div className="space-y-2">
-                          {orderData.items.map((item: any) => (
-                            <div key={item.id} className="flex justify-between">
-                              <div>
-                                <p>{item.productId} x {item.quantity}</p>
-                              </div>
-                              <p>${item.price.toFixed(2)}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-6 flex gap-3">
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/order/${orderData.order.id}`)}>
-                            Order Details
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/order/${orderData.order.id}/track`)}>
-                            Track Delivery
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium">No orders yet</h3>
-                  <p className="text-muted-foreground">When you make a purchase, it will appear here.</p>
-                  <Button className="mt-4" onClick={() => navigate("/")}>Start Shopping</Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="wishlist" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Wishlist</CardTitle>
-              <CardDescription>Manage your saved products</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingWishlist ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : wishlist && wishlist.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {wishlist.map((item: any) => (
-                    <Card key={item.id} className="overflow-hidden">
-                      <div className="aspect-square relative">
-                        <img 
-                          src={item.product.imageUrl} 
-                          alt={item.product.name} 
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-medium truncate">{item.product.name}</h3>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="font-medium">${item.product.price.toFixed(2)}</p>
-                          <Button size="sm" onClick={() => navigate(`/product/${item.product.id}`)}>
-                            View
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium">Your wishlist is empty</h3>
-                  <p className="text-muted-foreground">Save items that you like by clicking the heart icon.</p>
-                  <Button className="mt-4" onClick={() => navigate("/")}>Discover Products</Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        
       </Tabs>
     </div>
   );
