@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BarChart3, Package, Users, Settings, LogOut, AlertCircle, Loader2 } from "lucide-react";
+import { BarChart3, Package, Users, Settings, LogOut, AlertCircle, Loader2, Plus } from "lucide-react";
 import Notifications from "./notifications";
 import LanguageSwitcher from "./language-switcher";
 
