@@ -113,29 +113,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", async (req, res) => {
-    try {
-      if (!req.isAuthenticated() || (req.user as Express.User).role !== "seller") {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const { name, description, price, category, imageUrl } = req.body;
-      const product = await storage.createProduct({
-        name,
-        description,
-        price: parseFloat(price),
-        category,
-        imageUrl,
-        inStock: true,
-        isFeatured: false
-      });
-      
-      res.status(201).json(product);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create product" });
-    }
-  });
-
   // Categories routes
   app.get("/api/categories", async (_req, res) => {
     try {

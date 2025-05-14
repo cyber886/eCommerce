@@ -7,53 +7,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BarChart3, Package, Users, Settings, LogOut, AlertCircle, Loader2, Plus } from "lucide-react";
 import Notifications from "./notifications";
 import LanguageSwitcher from "./language-switcher";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function SellerNavbar() {
   const { user, logoutMutation } = useAuth();
   const [, navigate] = useLocation();
   const [expanded, setExpanded] = useState(true);
-  const [showProductDialog, setShowProductDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
   const { t } = useTranslation();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    const formData = new FormData(e.currentTarget);
-    const productData = {
-      name: formData.get('name') as string,
-      description: formData.get('description') as string,
-      price: formData.get('price') as string,
-      category: formData.get('category') as string,
-      imageUrl: formData.get('imageUrl') as string,
-    };
-
-    try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
-      });
-
-      if (!response.ok) throw new Error('Failed to create product');
-
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Mahsulot qo'shildi",
-      });
-      setShowProductDialog(false);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Mahsulot qo'shib bo'lmadi",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    navigate("/");
   };
 
   if (!user || user.role !== "seller") {
@@ -165,7 +128,7 @@ export default function SellerNavbar() {
             expanded={expanded}
           />
         </nav>
-
+        
         {/* Language switcher */}
         {expanded && (
           <div className="mt-4 px-3">
@@ -190,7 +153,7 @@ export default function SellerNavbar() {
             />
           </div>
         </div>
-
+          
         <Button
           variant="outline"
           className={`flex items-center gap-2 w-full ${!expanded && "justify-center"}`}
@@ -213,13 +176,13 @@ function NavItem({ href, icon, label, expanded }: { href: string; icon: React.Re
   const [location] = useLocation();
   // Check if this link's tab parameter matches the current URL's tab parameter
   let isActive = location === href;
-
+  
   // Special handling for tab links
   if (href.includes('?tab=')) {
     const currentTab = href.split('?tab=')[1]?.split('&')[0];
     const urlParams = new URLSearchParams(window.location.search);
     const activeTab = urlParams.get('tab');
-
+    
     isActive = activeTab === currentTab;
   }
 
