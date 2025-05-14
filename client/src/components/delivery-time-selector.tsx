@@ -119,26 +119,37 @@ export default function DeliveryTimeSelector({
             Yetkazib berish sanasini tanlang:
           </h3>
           
-          <div className="grid grid-cols-7 gap-2 max-h-[400px] overflow-y-auto">
-            {formattedDates.current.map(({ date, formattedDate, available }) => (
-              <Button
-                key={date.toISOString()}
-                type="button"
-                variant={selectedDate === formattedDate.fullDate ? "default" : "outline"}
-                className={`flex flex-col items-center p-2 h-auto ${!available ? 'bg-gray-100' : ''}`}
-                disabled={!available || (isSeller && deliveryStatus === 'accepted')}
-                onClick={() => onDateChange(formattedDate.fullDate)}
-              >
-                <div className="font-medium">{formattedDate.dayName}</div>
-                <div className="text-sm">{formattedDate.month} {formattedDate.dayNumber}</div>
-                {!available && (
-                  <Badge variant="destructive" className="mt-1 text-xs">
-                    Band qilingan
-                  </Badge>
-                )}
-              </Button>
-            ))}
-          </div>
+          <Input
+            type="date"
+            className="mb-4"
+            min={new Date().toISOString().split('T')[0]}
+            max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+            value={selectedDate}
+            onChange={(e) => onDateChange(e.target.value)}
+            disabled={isSeller && deliveryStatus === 'accepted'}
+          />
+          
+          {selectedDate && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {availableTimeSlots.map((slot) => (
+                <Button
+                  key={slot.time}
+                  type="button"
+                  variant={selectedTimeSlot === slot.time ? "default" : "outline"}
+                  className={`text-center p-2 relative ${!slot.isAvailable || slot.orderedBy ? 'bg-gray-100' : ''}`}
+                  disabled={!slot.isAvailable || slot.orderedBy !== undefined || (isSeller && deliveryStatus === 'accepted')}
+                  onClick={() => onTimeSlotChange(slot.time)}
+                >
+                  {slot.time}
+                  {slot.orderedBy && (
+                    <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs">
+                      Band qilingan
+                    </Badge>
+                  )}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
         
         <div>
