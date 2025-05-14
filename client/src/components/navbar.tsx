@@ -177,9 +177,9 @@ export default function Navbar() {
                       <span>{t('account')}</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate("/account?tab=orders")}>
+                  <DropdownMenuItem onClick={() => navigate("/orders")}>
                     <Package className="h-4 w-4 mr-2" />
-                    <span>Orders</span>
+                    <span>Buyurtmalar</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/account?tab=settings")}>
                     <Settings className="h-4 w-4 mr-2" />

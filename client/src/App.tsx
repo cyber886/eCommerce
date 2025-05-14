@@ -10,7 +10,8 @@ import CheckoutPage from "@/pages/checkout-page";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
 import SellerPage from "@/pages/seller-page";
-import OrderTrackingPage from "@/pages/order-tracking-page";
+import OrderTrackingPage from "./pages/order-tracking-page";
+import OrdersPage from "./pages/orders-page";
 import { CartProvider } from "@/hooks/use-cart";
 import { AuthProvider } from "@/hooks/use-auth";
 import { NotificationsProvider } from "@/hooks/use-notifications";
@@ -20,7 +21,7 @@ import { Loader2 } from "lucide-react";
 
 function Router() {
   const { user, isLoading } = useAuth();
-  
+
   return (
     <Switch>
       <Route path="/" component={HomePage}/>
@@ -28,7 +29,8 @@ function Router() {
       <Route path="/category/:category" component={CategoryPage}/>
       <ProtectedRoute path="/checkout" component={CheckoutPage}/>
       <ProtectedRoute path="/account" component={AccountPage}/>
-      <Route path="/tracking" component={OrderTrackingPage}/>
+      <Route path="/tracking" component={OrderTrackingPage} />
+      <Route path="/orders" component={OrdersPage} />
       <Route path="/auth">
         {user ? <Redirect to="/" /> : <AuthPage />}
       </Route>
