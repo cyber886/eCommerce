@@ -179,7 +179,7 @@ export default function Navbar() {
                   )}
                   <DropdownMenuItem onClick={() => navigate("/account?tab=orders")}>
                     <Package className="h-4 w-4 mr-2" />
-                    <span>{t('orders')}</span>
+                    <span>Orders</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/account?tab=settings")}>
                     <Settings className="h-4 w-4 mr-2" />
