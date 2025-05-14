@@ -7,28 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 
-interface OrderItem {
-  orderId: string;
-  productId: string;
-  quantity: number;
-  price: number;
-  id: string;
-}
-
-interface Order {
-  id: string;
-  userId: string;
-  status: string;
-  items: OrderItem[];
-  total: number;
-  createdAt: string;
-}
-
 export default function OrdersPage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  const { data: orders = [], isLoading } = useQuery<Order[]>({
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ['/api/purchase-history'],
     enabled: !!user,
   });
@@ -36,9 +19,9 @@ export default function OrdersPage() {
   if (!user) {
     return (
       <div className="container mx-auto py-20 text-center">
-        <h1 className="text-3xl font-bold mb-6">Orders History</h1>
-        <p className="mb-6">Please sign in to view your order history</p>
-        <Button onClick={() => navigate("/auth")}>Sign In</Button>
+        <h1 className="text-3xl font-bold mb-6">Buyurtmalar tarixi</h1>
+        <p className="mb-6">Buyurtmalar tarixini ko'rish uchun tizimga kiring</p>
+        <Button onClick={() => navigate("/auth")}>Tizimga kirish</Button>
       </div>
     );
   }
@@ -48,10 +31,10 @@ export default function OrdersPage() {
       <div className="container mx-auto py-8">
         <Card>
           <CardHeader>
-            <CardTitle>My Orders</CardTitle>
+            <CardTitle>Mening buyurtmalarim</CardTitle>
           </CardHeader>
           <CardContent>
-            <div>Loading...</div>
+            <div>Yuklanmoqda...</div>
           </CardContent>
         </Card>
       </div>
@@ -62,38 +45,38 @@ export default function OrdersPage() {
     <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
-          <CardTitle>My Orders</CardTitle>
+          <CardTitle>Mening buyurtmalarim</CardTitle>
         </CardHeader>
         <CardContent>
           {orders.length === 0 ? (
             <div className="text-center py-8">
-              <p>No orders yet</p>
+              <p>Hozircha buyurtmalar yo'q</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Buyurtma №</TableHead>
+                  <TableHead>Sana</TableHead>
+                  <TableHead>Mahsulotlar</TableHead>
+                  <TableHead>Summa</TableHead>
+                  <TableHead>Holat</TableHead>
+                  <TableHead className="text-right">Amallar</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>{order.id}</TableCell>
-                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{order.items.length} items</TableCell>
-                    <TableCell>${order.total.toFixed(2)}</TableCell>
+                    <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{order.items} ta mahsulot</TableCell>
+                    <TableCell>${order.total?.toFixed(2) || '0.00'}</TableCell>
                     <TableCell>
                       <Badge>{order.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => navigate(`/tracking?order=${order.id}`)}>
-                        View
+                        Ko'rish
                       </Button>
                     </TableCell>
                   </TableRow>
