@@ -38,11 +38,15 @@ export default function DeliveryTimeSelector({
   const isInitialized = useRef(false);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlotAvailability[]>([]);
   
-  const formattedDates = useRef(getDeliveryDates(1, 7).map(date => ({
-    date,
-    formattedDate: formatDeliveryDate(date),
-    available: true,
-  })));
+  const formattedDates = useRef(Array.from({ length: 365 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    return {
+      date,
+      formattedDate: formatDeliveryDate(date),
+      available: Math.random() > 0.3, // Simulate availability
+    };
+  }));
 
   useEffect(() => {
     if (!isInitialized.current && !selectedDate && formattedDates.current.length > 0) {
@@ -115,18 +119,23 @@ export default function DeliveryTimeSelector({
             Yetkazib berish sanasini tanlang:
           </h3>
           
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-2 max-h-[400px] overflow-y-auto">
             {formattedDates.current.map(({ date, formattedDate, available }) => (
               <Button
                 key={date.toISOString()}
                 type="button"
                 variant={selectedDate === formattedDate.fullDate ? "default" : "outline"}
-                className="flex flex-col items-center p-2 h-auto"
+                className={`flex flex-col items-center p-2 h-auto ${!available ? 'bg-gray-100' : ''}`}
                 disabled={!available || (isSeller && deliveryStatus === 'accepted')}
                 onClick={() => onDateChange(formattedDate.fullDate)}
               >
                 <div className="font-medium">{formattedDate.dayName}</div>
                 <div className="text-sm">{formattedDate.month} {formattedDate.dayNumber}</div>
+                {!available && (
+                  <Badge variant="destructive" className="mt-1 text-xs">
+                    Band qilingan
+                  </Badge>
+                )}
               </Button>
             ))}
           </div>

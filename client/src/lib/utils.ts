@@ -40,9 +40,10 @@ export function formatDeliveryDate(date: Date): { dayName: string; dayNumber: nu
 }
 
 // Delivery time slots
-export const timeSlots = [
-  { id: 1, time: "9:00 - 12:00" },
-  { id: 2, time: "12:00 - 15:00" },
-  { id: 3, time: "15:00 - 18:00" },
-  { id: 4, time: "18:00 - 21:00" },
-];
+export const timeSlots = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 9; // Start from 9 AM
+  return {
+    id: i + 1,
+    time: `${hour}:00 - ${hour + 1}:00`,
+  };
+});
