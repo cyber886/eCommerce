@@ -138,22 +138,6 @@ export default function SellerNavbar() {
       </div>
 
       <div className="p-4 border-t">
-        <div className="flex items-center justify-between mb-4">
-          {expanded ? (
-            <span className="text-xs text-muted-foreground">{t('notifications')}</span>
-          ) : (
-            <span></span>
-          )}
-          <div>
-            <Notifications 
-              role="seller" 
-              onViewOrder={(orderId) => {
-                navigate(`/seller-page?tab=orders&order=${orderId}`);
-              }}
-            />
-          </div>
-        </div>
-          
         <Button
           variant="outline"
           className={`flex items-center gap-2 w-full ${!expanded && "justify-center"}`}
