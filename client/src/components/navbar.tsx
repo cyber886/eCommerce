@@ -25,7 +25,7 @@ import {
   ShoppingCart, 
   User, 
   Search, 
-  Heart, 
+  Package, 
   LogOut, 
   UserCircle, 
   Settings, 
@@ -177,9 +177,9 @@ export default function Navbar() {
                       <span>{t('account')}</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate("/account")}>
-                    <Heart className="h-4 w-4 mr-2" />
-                    <span>{t('wishlist')}</span>
+                  <DropdownMenuItem onClick={() => navigate("/account?tab=orders")}>
+                    <Package className="h-4 w-4 mr-2" />
+                    <span>{t('orders')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/account?tab=settings")}>
                     <Settings className="h-4 w-4 mr-2" />
