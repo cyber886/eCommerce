@@ -107,6 +107,20 @@ export default function SellerNavbar() {
             label={t('products')} 
             expanded={expanded}
           />
+          <Button
+            variant="default"
+            className={`w-full flex items-center px-3 py-2 text-sm font-medium my-2 ${!expanded && "justify-center"}`}
+            onClick={() => setShowProductDialog(true)}
+          >
+            {expanded ? (
+              <>
+                <Plus className="h-5 w-5 mr-2" />
+                {t('addProduct')}
+              </>
+            ) : (
+              <Plus className="h-5 w-5" />
+            )}
+          </Button>
           <NavItem 
             href="/seller-page?tab=settings" 
             icon={<Settings className="h-5 w-5" />} 
