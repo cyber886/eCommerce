@@ -131,25 +131,31 @@ export default function DeliveryTimeSelector({
           />
           
           {selectedDate && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {availableTimeSlots.map((slot) => (
-                <Button
-                  key={slot.time}
-                  type="button"
-                  variant={selectedTimeSlot === slot.time ? "default" : "outline"}
-                  className={`text-center p-2 relative ${!slot.isAvailable || slot.orderedBy ? 'bg-gray-100' : ''}`}
-                  disabled={!slot.isAvailable || slot.orderedBy !== undefined || (isSeller && deliveryStatus === 'accepted')}
-                  onClick={() => onTimeSlotChange(slot.time)}
-                >
-                  {slot.time}
-                  {slot.orderedBy && (
-                    <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs">
-                      Band qilingan
-                    </Badge>
-                  )}
-                </Button>
-              ))}
-            </div>
+            <>
+              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <Clock className="h-4 w-4 mr-1" />
+                Yetkazib berish vaqtini tanlang:
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {availableTimeSlots.map((slot) => (
+                  <Button
+                    key={slot.time}
+                    type="button"
+                    variant={selectedTimeSlot === slot.time ? "default" : "outline"}
+                    className={`text-center p-2 relative ${!slot.isAvailable || slot.orderedBy ? 'bg-gray-100' : ''}`}
+                    disabled={!slot.isAvailable || slot.orderedBy !== undefined || (isSeller && deliveryStatus === 'accepted')}
+                    onClick={() => onTimeSlotChange(slot.time)}
+                  >
+                    {slot.time}
+                    {slot.orderedBy && (
+                      <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs">
+                        Ordered
+                      </Badge>
+                    )}
+                  </Button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
