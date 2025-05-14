@@ -26,7 +26,7 @@ export interface IStorage {
   getFeaturedProducts(): Promise<Product[]>;
   getProductsByCategory(category: string): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
-  
+
   // Cart
   getCartItems(sessionId: string): Promise<CartItem[]>;
   getCartItemWithProduct(sessionId: string): Promise<(CartItem & { product: Product })[]>;
@@ -39,7 +39,7 @@ export interface IStorage {
   createOrder(order: InsertOrder): Promise<Order>;
   getOrderById(id: number): Promise<Order | undefined>;
   getOrdersBySessionId(sessionId: string): Promise<Order[]>;
-  
+
   // Order Items
   createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
   getOrderItemsByOrderId(orderId: number): Promise<OrderItem[]>;
@@ -47,20 +47,20 @@ export interface IStorage {
   // Categories
   getAllCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;
-  
+
   // Users
   createUser(user: InsertUser): Promise<User>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  
+
   // Wishlist
   getWishlistItems(userId: number): Promise<WishlistItem[]>;
   getWishlistItemWithProduct(userId: number): Promise<(WishlistItem & { product: Product })[]>;
   addToWishlist(item: InsertWishlistItem): Promise<WishlistItem>;
   removeFromWishlist(id: number): Promise<void>;
   isProductInWishlist(userId: number, productId: number): Promise<boolean>;
-  
+
   // Reviews
   getReviewsByProductId(productId: number): Promise<Review[]>;
   getReviewsByUserId(userId: number): Promise<Review[]>;
@@ -69,7 +69,7 @@ export interface IStorage {
   updateReview(id: number, review: Partial<InsertReview>): Promise<Review | undefined>;
   deleteReview(id: number): Promise<void>;
   getAverageRatingByProductId(productId: number): Promise<number>;
-  
+
   // Session store for authentication
   sessionStore: any;
 }
@@ -110,7 +110,7 @@ export class MemStorage implements IStorage {
     this.userIdCounter = 1;
     this.wishlistItemIdCounter = 1;
     this.reviewIdCounter = 1;
-    
+
     // Create session store for authentication
     // We'll set this up in the auth.ts file instead
     this.sessionStore = null;
@@ -122,11 +122,11 @@ export class MemStorage implements IStorage {
     // Initialize users (customer and seller)
     this.initializeUsers();
   }
-  
+
   private initializeUsers(): void {
     // Users will be created with hashed passwords in server/routes.ts
   }
-  
+
   // User methods
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
@@ -135,24 +135,24 @@ export class MemStorage implements IStorage {
     this.users.set(id, newUser);
     return newUser;
   }
-  
+
   async getUserById(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
-  
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
-  
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
   }
-  
+
   // Wishlist methods
   async getWishlistItems(userId: number): Promise<WishlistItem[]> {
     return Array.from(this.wishlistItems.values()).filter(item => item.userId === userId);
   }
-  
+
   async getWishlistItemWithProduct(userId: number): Promise<(WishlistItem & { product: Product })[]> {
     const wishlistItems = await this.getWishlistItems(userId);
     return await Promise.all(
@@ -162,28 +162,28 @@ export class MemStorage implements IStorage {
       })
     );
   }
-  
+
   async addToWishlist(item: InsertWishlistItem): Promise<WishlistItem> {
     // Check if the item already exists in the wishlist
     const existingItem = Array.from(this.wishlistItems.values()).find(
       (wishlistItem) => wishlistItem.productId === item.productId && wishlistItem.userId === item.userId
     );
-    
+
     if (existingItem) {
       return existingItem;
     }
-    
+
     const id = this.wishlistItemIdCounter++;
     const createdAt = new Date();
     const newItem: WishlistItem = { ...item, id, createdAt };
     this.wishlistItems.set(id, newItem);
     return newItem;
   }
-  
+
   async removeFromWishlist(id: number): Promise<void> {
     this.wishlistItems.delete(id);
   }
-  
+
   async isProductInWishlist(userId: number, productId: number): Promise<boolean> {
     return Array.from(this.wishlistItems.values()).some(
       item => item.userId === userId && item.productId === productId
@@ -391,7 +391,7 @@ export class MemStorage implements IStorage {
     const itemsToDelete = Array.from(this.cartItems.values())
       .filter(item => item.sessionId === sessionId)
       .map(item => item.id);
-    
+
     itemsToDelete.forEach(id => this.cartItems.delete(id));
   }
 
@@ -478,7 +478,7 @@ export class MemStorage implements IStorage {
   async getAverageRatingByProductId(productId: number): Promise<number> {
     const reviews = await this.getReviewsByProductId(productId);
     if (reviews.length === 0) return 0;
-    
+
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     return totalRating / reviews.length;
   }

@@ -254,13 +254,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/orders", async (req, res) => {
     try {
-      const sessionId = getSessionId(req);
-      if (!sessionId) {
-        return res.status(400).json({ error: "Session ID not found" });
+      if (!req.isAuthenticated() || (req.user as Express.User).role !== "seller") {
+        return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const orders = await storage.getOrdersBySessionId(sessionId);
-      res.json(orders);
+      const orders = await storage.getAllOrders();
+      const ordersWithDetails = await Promise.all(orders.map(async (order) => {
+        const items = await storage.getOrderItemsByOrderId(order.id);
+        return { ...order, items };
+      }));
+      
+      res.json(ordersWithDetails);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch orders" });
     }
