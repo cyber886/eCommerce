@@ -98,12 +98,8 @@ export default function SellerNavbar() {
           <NavItem 
             href="/seller-page?tab=orders" 
             icon={<Package className="h-5 w-5" />} 
-            label={t('customerOrders')}
+            label={t('orders')} 
             expanded={expanded}
-            onClick={() => {
-              navigate("/seller-page?tab=orders");
-              setActiveTab("orders");
-            }}
           />
           <NavItem 
             href="/seller-page?tab=products" 
