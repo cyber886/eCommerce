@@ -189,6 +189,11 @@ export default function ProductPage() {
               <div id="reviews" className="border-t pt-8">
                 <ProductReviews productId={product.id} />
               </div>
+              
+              {/* Reviews Section */}
+              <div id="reviews" className="mt-12 border-t pt-8">
+                <ProductReviews productId={product.id} />
+              </div>
             </div>
           ) : (
             <div className="text-center">Product not found</div>
