@@ -270,6 +270,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/purchase-history", async (req, res) => {
+    try {
+      const userId = (req.user as Express.User)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const orders = await storage.getOrdersByUserId(userId);
+      const ordersWithDetails = await Promise.all(orders.map(async (order) => {
+        const items = await storage.getOrderItemsByOrderId(order.id);
+        return { ...order, items };
+      }));
+      
+      res.json(ordersWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
   app.get("/api/orders/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

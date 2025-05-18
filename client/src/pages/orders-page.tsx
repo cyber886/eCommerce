@@ -12,7 +12,14 @@ export default function OrdersPage() {
   const [, navigate] = useLocation();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['/api/purchase-history'],
+    queryKey: ['orders'],
+    queryFn: async () => {
+      const response = await fetch('/api/purchase-history');
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      return response.json();
+    },
     enabled: !!user,
   });
 
