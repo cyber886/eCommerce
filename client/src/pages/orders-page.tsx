@@ -18,7 +18,8 @@ export default function OrdersPage() {
       if (!response.ok) {
         throw new Error('Failed to fetch orders');
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     enabled: !!user,
   });
@@ -56,8 +57,13 @@ export default function OrdersPage() {
         </CardHeader>
         <CardContent>
           {orders.length === 0 ? (
-            <div className="text-center py-8">
-              <p>Hozircha buyurtmalar yo'q</p>
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <Package className="h-12 w-12 mx-auto text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Sizda hali buyurtmalar yo'q</h3>
+              <p className="text-muted-foreground mb-4">Mahsulotlarni xarid qiling va buyurtmalaringizni shu yerda kuzating</p>
+              <Button onClick={() => navigate("/")}>Xarid qilish</Button>
             </div>
           ) : (
             <Table>
@@ -74,12 +80,14 @@ export default function OrdersPage() {
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell>{order.id}</TableCell>
-                    <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{order.items} ta mahsulot</TableCell>
-                    <TableCell>${order.total?.toFixed(2) || '0.00'}</TableCell>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{order.items?.length || 0} ta mahsulot</TableCell>
+                    <TableCell className="font-medium">${order.total?.toFixed(2) || '0.00'}</TableCell>
                     <TableCell>
-                      <Badge>{order.status}</Badge>
+                      <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                        {order.status}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => navigate(`/tracking?order=${order.id}`)}>
