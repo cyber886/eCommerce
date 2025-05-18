@@ -70,10 +70,17 @@ export default function OrdersPage() {
               </div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Buyurtma №</TableHead>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <Button variant="outline" onClick={() => navigate("/")} className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Mahsulotlarni ko'rish
+                </Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Buyurtma №</TableHead>
                   <TableHead>Sana</TableHead>
                   <TableHead>Mahsulotlar</TableHead>
                   <TableHead>Summa</TableHead>
