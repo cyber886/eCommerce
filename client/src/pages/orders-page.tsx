@@ -53,8 +53,12 @@ export default function OrdersPage() {
   return (
     <div className="container mx-auto py-8">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Mening buyurtmalarim</CardTitle>
+          <Button onClick={() => navigate("/")} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Mahsulot qo'shish
+          </Button>
         </CardHeader>
         <CardContent>
           {orders.length === 0 ? (
