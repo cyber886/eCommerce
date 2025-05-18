@@ -64,7 +64,10 @@ export default function OrdersPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Sizda hali buyurtmalar yo'q</h3>
               <p className="text-muted-foreground mb-4">Mahsulotlarni xarid qiling va buyurtmalaringizni shu yerda kuzating</p>
-              <Button onClick={() => navigate("/")}>Xarid qilish</Button>
+              <div className="flex gap-4 justify-center">
+                <Button onClick={() => navigate("/")}>Xarid qilish</Button>
+                <Button variant="outline" onClick={() => navigate("/")}>Bosh sahifaga qaytish</Button>
+              </div>
             </div>
           ) : (
             <Table>
